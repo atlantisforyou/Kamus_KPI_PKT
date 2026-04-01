@@ -4,10 +4,14 @@ import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'kamus_kpi'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 25060,
+  ssl: {
+    rejectUnauthorized: false
+  }
 };
 
 export async function POST(request) {
