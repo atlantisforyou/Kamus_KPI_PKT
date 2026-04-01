@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// KONFIGURASI STATUS DISAMAKAN
 const STATUS_CONFIG = {
   draft:     { label: 'Draft',      color: '#6b7280', bg: '#f3f4f6' },
   submitted: { label: 'Review',     color: '#d97706', bg: '#fef3c7' }, 
@@ -20,7 +19,6 @@ function StatusBadge({ status }) {
 }
 
 export default function ManajemenDashboard() {
-  // ✅ 1. State disesuaikan dengan permintaan baru
   const [stats, setStats]     = useState({ total: 0, reviewed: 0, approved: 0 });
   const [histori, setHistori] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,14 +29,12 @@ export default function ManajemenDashboard() {
       .then(d => {
         const list = d.data || [];
         
-        // ✅ 2. Perhitungan statistik diubah
         setStats({
           total:    list.length,
-          reviewed: list.filter(k => k.status === 'reviewed').length, // Status dari Key Partner yang siap diproses Manajemen
+          reviewed: list.filter(k => k.status === 'reviewed').length,
           approved: list.filter(k => k.status === 'approved').length,
         });
 
-        // Filter Histori
         const hist = list
           .filter(k => ['approved', 'revisi'].includes(k.status))
           .sort((a, b) => 
@@ -130,7 +126,6 @@ export default function ManajemenDashboard() {
         <p>Setujui atau kembalikan pengajuan Kamus KPI yang telah direview oleh Key Partner.</p>
       </div>
 
-      {/* ✅ 3. Tampilan Stats Grid disesuaikan */}
       <div className="stats-grid">
         {[
           { label: 'Total KPI', val: stats.total,    c: '#1a2b4a' },
@@ -144,17 +139,14 @@ export default function ManajemenDashboard() {
         ))}
       </div>
 
-      {/* CTA */}
       <div className="cta-card">
         <div className="cta-text">
           <h3>Approval Kamus KPI</h3>
-          {/* ✅ 4. Memanggil data yang benar (stats.reviewed) */}
           <p>Terdapat {loading ? '...' : stats.reviewed} KPI yang menunggu persetujuan kamu.</p>
         </div>
         <Link href="/manajemen/approval" className="btn-cta">Lihat Pengajuan →</Link>
       </div>
 
-      {/* Histori */}
       <div>
         <div className="section-header">
           <div>

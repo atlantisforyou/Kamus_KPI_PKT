@@ -2,7 +2,7 @@
     import bcrypt from 'bcryptjs';
     import db from '@/lib/db';
 
-    // GET /api/karyawan — list semua karyawan
+    // GET /api/karyawan
     export async function GET() {
     try {
         const [rows] = await db.execute(
@@ -15,7 +15,7 @@
     }
     }
 
-    // POST /api/karyawan — tambah karyawan baru
+    // POST /api/karyawan
     export async function POST(request) {
     try {
         const { npk, nama, unit_kerja, role } = await request.json();
@@ -25,7 +25,7 @@
 
         const npkUpper = npk.trim().toUpperCase();
 
-        // Cek NPK sudah ada
+        // Cek NPK
         const [existing] = await db.execute(
         'SELECT id FROM karyawan WHERE npk = ?', [npkUpper]
         );
@@ -33,7 +33,6 @@
         return NextResponse.json({ error: `NPK ${npkUpper} sudah terdaftar` }, { status: 409 });
         }
 
-        // Hash NPK sebagai password
         const hashedPassword = await bcrypt.hash(npkUpper, 10);
 
         await db.execute(

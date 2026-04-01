@@ -61,7 +61,6 @@ export async function GET() {
       };
     });
 
-    // Sort: pct tertinggi di atas
     result.sort((a, b) => b.pct - a.pct);
 
     return NextResponse.json({ data: result });

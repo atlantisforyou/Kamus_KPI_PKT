@@ -19,10 +19,9 @@
     }
     }
 
-    // PUT /api/karyawan/[id] — update role atau is_active
+    // PUT /api/karyawan/[id]
     export async function PUT(request, context) {
     try {
-        // Next.js 15: params harus di-await
         const { id } = await context.params;
         const body = await request.json();
 

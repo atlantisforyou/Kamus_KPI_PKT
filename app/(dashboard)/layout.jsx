@@ -33,7 +33,6 @@ export default function DashboardLayout({ children }) {
           toggleCollapse={() => setUi(p => ({ ...p, col: !p.col }))} 
         />
 
-        {/* .main sudah menyesuaikan secara otomatis dengan lebar .sidebar */}
         <main className={`main ${ui.col ? 'collapsed' : ''}`}>
           <Header 
             sidebarOpen={ui.open} 

@@ -14,7 +14,6 @@ const STAT_CFG = {
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
 
-// Kumpulan Icon (Shorthand)
 const Ico = {
   Close: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
   Fwd:   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
@@ -131,7 +130,7 @@ export default function KeyPartnerReviewPage() {
 
         <div className="table-wrap">
           {load ? <div className="loading">{Ico.Load} Memuat data...</div> : 
-           fltd.length === 0 ? <div className="empty"><div>{Ico.Empty}</div><p>Tidak ada data KPI yang sesuai pencarian/filter.</p></div> : 
+            fltd.length === 0 ? <div className="empty"><div>{Ico.Empty}</div><p>Tidak ada data KPI yang sesuai pencarian/filter.</p></div> : 
           (
             <table>
               <thead><tr><th>#</th><th>Nama KPI</th><th>Perspektif BSC</th><th>Dibuat Oleh</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>

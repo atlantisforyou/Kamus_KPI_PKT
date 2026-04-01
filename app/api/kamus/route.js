@@ -46,7 +46,7 @@ export async function GET(request) {
       }
 
     } else {
-      // User biasa: hanya lihat punya sendiri
+      // User: hanya lihat punya sendiri
       if (statusFilter) {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id

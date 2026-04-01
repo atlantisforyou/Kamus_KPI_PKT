@@ -23,7 +23,6 @@ export async function GET(request, context) {
     if (rows.length === 0) return NextResponse.json({ error: 'KPI tidak ditemukan' }, { status: 404 });
 
     const kpi = rows[0];
-    // User biasa hanya bisa lihat punya sendiri
     if (user.role === 'user' && Number(kpi.dibuat_oleh) !== Number(user.id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
     }
@@ -49,7 +48,6 @@ export async function PUT(request, context) {
     if (rows.length === 0) return NextResponse.json({ error: 'KPI tidak ditemukan' }, { status: 404 });
 
     const kpi = rows[0];
-    // ✅ Admin bisa edit KPI siapapun, user biasa hanya punya sendiri
     if (user.role !== 'admin' && Number(kpi.dibuat_oleh) !== Number(user.id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
     }
@@ -87,7 +85,7 @@ export async function PUT(request, context) {
   }
 }
 
-// DELETE /api/kamus/[id] — hanya admin
+// DELETE /api/kamus/[id]
 export async function DELETE(request, context) {
   try {
     const { id } = await context.params;

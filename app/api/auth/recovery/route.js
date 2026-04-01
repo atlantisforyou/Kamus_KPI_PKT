@@ -23,7 +23,6 @@ export async function POST(request) {
     connection = await mysql.createConnection(dbConfig);
 
     switch (action) {
-      // 1. MINTA OTP
       case 'request_otp':
         const [cekUser] = await connection.execute('SELECT id, nama FROM karyawan WHERE email = ?', [email]);
         if (cekUser.length === 0) {
@@ -73,12 +72,10 @@ export async function POST(request) {
           `,
         };
 
-        // --- EKSEKUSI KIRIM EMAIL ---
         await transporter.sendMail(mailOptions);
 
         return NextResponse.json({ message: "OTP berhasil dikirim ke email" }, { status: 200 });
 
-      // 2. VERIFIKASI OTP SAJA (Sebelum reset password)
       case 'verify_otp':
         if (!otp) return NextResponse.json({ error: "OTP wajib diisi" }, { status: 400 });
         
@@ -88,7 +85,7 @@ export async function POST(request) {
         }
         return NextResponse.json({ message: "OTP Valid" }, { status: 200 });
 
-      // 3. RESET PASSWORD BARU
+      // RESET PASSWORD BARU
       case 'reset_password':
         if (!otp || !newPassword) {
           return NextResponse.json({ error: "OTP dan Password baru wajib diisi" }, { status: 400 });

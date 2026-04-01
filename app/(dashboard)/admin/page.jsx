@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// ─── KOMPONEN SKELETON & PROGRESS BAR ───────────────────────────
 const Skel = ({ w = '100%', h = '14px', r = '6px' }) => <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />;
 
 const PBar = ({ l, pct, c, tot, app, load }) => (
@@ -77,8 +76,8 @@ export default function AdminDashboard() {
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', marginBottom: 4 }}>Progres Perspektif BSC</h2>
             <p style={{ fontSize: 13, color: '#7a8b9a', marginBottom: 22 }}>Distribusi dan status approval KPI berdasarkan 4 perspektif Balanced Scorecard.</p>
             {load ? Array.from({ length: 4 }).map((_, i) => <PBar key={i} load />) : 
-             !bsc.length ? <p style={{ fontSize: 14, color: '#b0bcc8', textAlign: 'center', padding: '32px 0' }}>Belum ada data KPI.</p> : 
-             bsc.map((p, i) => <PBar key={p.l} l={p.l} pct={p.pct} c={BSC_COLORS[i % BSC_COLORS.length]} tot={p.tot} app={p.app} load={false} />)}
+              !bsc.length ? <p style={{ fontSize: 14, color: '#b0bcc8', textAlign: 'center', padding: '32px 0' }}>Belum ada data KPI.</p> : 
+              bsc.map((p, i) => <PBar key={p.l} l={p.l} pct={p.pct} c={BSC_COLORS[i % BSC_COLORS.length]} tot={p.tot} app={p.app} load={false} />)}
           </div>
 
           <div className="section-card">

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import logoPkt from '../../data/logopkt.png';
 import homeBg from '../../data/Home.png';
 
-// ─── KUMPULAN ICON ───
 const Ico = {
   Err:   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
   Succ:  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
@@ -34,10 +33,8 @@ export default function LoginPage() {
   const setView = (v) => setUi({ v, ld: false, err: '', suc: '' });
   const upd = (k, v) => setF(p => ({ ...p, [k]: v }));
 
-  // Cek apakah user sedang mengetik "Admin"
   const isAdmin = f.nama.trim().toLowerCase() === 'admin';
 
-  // Helper API Request
   const req = async (url, body, onSucc) => {
     setUi(p => ({ ...p, err: '', suc: '', ld: true }));
     try {
@@ -56,13 +53,11 @@ export default function LoginPage() {
         if (!f.nama?.trim() || !f.loginPass?.trim()) {
           return setUi(p => ({ ...p, err: 'Nama dan Password wajib diisi untuk Admin' }));
         }
-        // Admin kirim nama dan password
         req('/api/auth/login', { nama: f.nama, password: f.loginPass, isAdmin: true }, (d) => router.push(d.redirect));
       } else {
         if (!f.nama?.trim() || !f.npk?.trim()) {
           return setUi(p => ({ ...p, err: 'Nama dan NPK wajib diisi' }));
         }
-        // User Biasa HANYA kirim nama dan npk
         req('/api/auth/login', { nama: f.nama, npk: f.npk, isAdmin: false }, (d) => router.push(d.redirect));
       }
     },
@@ -112,14 +107,12 @@ export default function LoginPage() {
                 <form onSubmit={actions.login}>
                   <Fld l="Nama Lengkap" val={f.nama} onChange={(e) => upd('nama', e.target.value)} p="Masukkan nama lengkap sesuai data" autoF />
                   
-                  {/* Tampilkan Kolom NPK JIKA BUKAN Admin */}
                   {!isAdmin && (
                     <Fld l="NPK" val={f.npk} onChange={(e) => upd('npk', e.target.value.toUpperCase())} p="Masukkan NPK kamu" st={{ letterSpacing: 1, fontWeight: 500 }} />
                   )}
                   
-                  {/* Tampilkan Kolom Password HANYA JIKA Admin */}
                   {isAdmin && (
-                    <Fld l="Password Khusus" val={f.loginPass} onChange={(e) => upd('loginPass', e.target.value)} t="password" p="Masukkan password admin" />
+                    <Fld l="Password" val={f.loginPass} onChange={(e) => upd('loginPass', e.target.value)} t="password" p="Masukkan password admin" />
                   )}
                   
                   <div className="link-forgot" onClick={() => setView('forgot')}>Lupa Password?</div>

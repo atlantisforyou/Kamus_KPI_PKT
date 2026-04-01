@@ -20,7 +20,6 @@ const formatTgl = (d) => d
   ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
   : '-';
 
-// Baris info (label : value) dalam tabel
 function infoRow(label, value) {
   return new TableRow({
     children: [
@@ -48,7 +47,6 @@ function infoRow(label, value) {
   });
 }
 
-// Section header paragraph
 function sectionHeader(text) {
   return new Paragraph({
     spacing: { before: 240, after: 120 },

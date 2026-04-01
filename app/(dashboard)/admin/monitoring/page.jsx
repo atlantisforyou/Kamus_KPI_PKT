@@ -101,7 +101,6 @@ function DetailModal({ k, onClose, onReview }) {
         <div className="modal-actions">
           <button className="btn-modal btn-cancel" onClick={onClose}>Tutup</button>
           
-          {/* Tombol akan disembunyikan jika statusnya sudah approved atau reviewed */}
           {k.status !== 'approved' && k.status !== 'reviewed' && (
             <button 
               className="btn-modal btn-forward" 
@@ -123,7 +122,7 @@ function DetailModal({ k, onClose, onReview }) {
 
 // ── MAIN ─────────────────────────────────────────────────────
 export default function MonitoringPage() {
-  const [view, setView]     = useState('list'); // 'list' | 'tambah'
+  const [view, setView]     = useState('list');
   const [data, setData]     = useState([]);
   const [load, setLoad]     = useState(true);
   const [filter, setFilter] = useState({ q: '', stat: '' });
@@ -214,8 +213,8 @@ const handleReview = async (id, nama) => {
   const filtered = data.filter(k =>
     (!filter.stat || k.status === filter.stat) &&
     (k.nama_kpi?.toLowerCase().includes(filter.q.toLowerCase()) ||
-     k.pembuat_nama?.toLowerCase().includes(filter.q.toLowerCase()) ||
-     k.perspektif_bsc?.toLowerCase().includes(filter.q.toLowerCase()))
+      k.pembuat_nama?.toLowerCase().includes(filter.q.toLowerCase()) ||
+      k.perspektif_bsc?.toLowerCase().includes(filter.q.toLowerCase()))
   );
 
   const formatTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';

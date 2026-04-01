@@ -1,6 +1,5 @@
 'use client';
 
-// ─── KONSTANTA & OPSI DERINGKAS ──────────────────────────────────────────
 const BSC = ['Financial', 'Customer', 'Internal Process', 'Learning & Growth'];
 const TIPE = ['Leading', 'Lagging'];
 const JENIS = ['Average', 'Sum', 'Take Last Known'];
@@ -12,7 +11,6 @@ const BULAN = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'o
 
 // ─── KOMPONEN UI GLOBAL (SHARED) ─────────────────────────────────────────
 
-// ✅ Base style untuk semua input agar warnanya seragam HITAM (#000)
 const baseInput = { 
   width: '100%', padding: '10px 14px', border: '1.5px solid #e5eaf0', borderRadius: 8, 
   fontSize: 14, fontFamily: 'inherit', color: '#000', background: '#f8fafc', outline: 'none', transition: 'border-color 0.2s' 
@@ -121,7 +119,7 @@ export function TargetValidasiForm({ form, set }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div>
             <span style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#7a8b9a', marginBottom: 6, textTransform: 'uppercase' }}>Target Tahunan (Total)</span>
-            <input type="number" value={form.target_tahunan || ''} onChange={set('target_tahunan')} placeholder="0.00" style={baseInput} onFocus={focus} onBlur={blur} />
+            <input type="number" value={form.target_tahunan || ''} readOnly={true} placeholder="0.00" style={baseInput} onFocus={focus} onBlur={blur} />
           </div>
           <div>
             <span style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#7a8b9a', marginBottom: 6, textTransform: 'uppercase' }}>Sumber Data</span>

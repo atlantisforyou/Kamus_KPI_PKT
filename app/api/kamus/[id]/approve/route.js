@@ -3,9 +3,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 
-// ════════════════════════════════════════════════════════════
 // 1. POST: Untuk Key Partner & Manajemen (Sistem Approve/Review)
-// ════════════════════════════════════════════════════════════
 export async function POST(request, context) {
   try {
     const { id } = await context.params;
@@ -78,9 +76,7 @@ export async function POST(request, context) {
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// 2. PATCH: Untuk Admin Bypass Status (Dari Halaman Monitoring)
-// ════════════════════════════════════════════════════════════
+// PATCH: Untuk Admin Bypass Status (Dari Halaman Monitoring)
 export async function PATCH(request, context) {
   try {
     const { id } = await context.params;
@@ -88,7 +84,6 @@ export async function PATCH(request, context) {
     const token = cookieStore.get('token')?.value;
     const user = verifyToken(token);
 
-    // Hanya admin yang boleh pakai jalur pintas ini
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Akses ditolak. Hanya Admin yang diizinkan.' }, { status: 403 });
     }
