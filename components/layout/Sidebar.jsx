@@ -7,7 +7,7 @@ const MENUS = {
   user: [
     { href: '/user', label: 'Dashboard', icon: 'home' }, 
     { href: '/user/kamus', label: 'Kamus KPI', icon: 'book' },
-    { href: '/user/rekap', label: 'Rekap KPI', icon: 'list' }
+    { href: '/user/rekap', label: 'My Progress', icon: 'list' }
   ],
   'key-partner': [
     { href: '/key-partner', label: 'Dashboard', icon: 'home' }, 
@@ -19,7 +19,7 @@ const MENUS = {
     { href: '/admin', label: 'Dashboard', icon: 'home' }, 
     { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: 'users' }, 
     { href: '/admin/monitoring', label: 'Monitoring', icon: 'bar-chart' },
-    { href: '/admin/rekap', label: 'Rekap KPI', icon: 'list' }
+    { href: '/admin/rekap', label: 'Progress KPI', icon: 'list' }
   ],
   manajemen: [
     { href: '/manajemen', label: 'Dashboard', icon: 'home' }, 

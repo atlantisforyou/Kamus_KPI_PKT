@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import { Icon, ROLE_LABEL } from './Sidebar';
 
 const LABELS = {
-  '/user': 'Dashboard', '/user/kamus': 'Kamus KPI Saya', '/user/kamus/tambah': 'Tambah KPI',
+  '/user': 'Dashboard', '/user/kamus': 'Kamus KPI Saya', '/user/rekap': 'Monitoring KPI Saya',
   '/key-partner': 'Dashboard', '/key-partner/review': 'Review Kamus',
-  '/admin': 'Dashboard', '/admin/tambah-karyawan': 'Tambah Karyawan', '/admin/karyawan': 'Kelola Karyawan', '/admin/monitoring': 'Monitoring',
+  '/admin': 'Dashboard', '/admin/rekap': 'Monitoring Kamus KPI', '/admin/karyawan': 'Kelola Karyawan', '/admin/monitoring': 'Monitoring',
   '/manajemen': 'Dashboard', '/manajemen/approval': 'Approval Kamus',
 };
 
