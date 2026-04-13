@@ -1,29 +1,19 @@
-    'use client';
+'use client';
 
-    // ─── BADGE ────────────────────────────────────────────────────
-    // Props: children, color ('blue'|'green'|'red'|'yellow'|'gray'|'purple'), size ('sm'|'md')
-    const COLOR_MAP = {
-    blue:   { color: '#2563eb', bg: '#dbeafe' },
-    green:  { color: '#16a34a', bg: '#dcfce7' },
-    red:    { color: '#dc2626', bg: '#fee2e2' },
-    yellow: { color: '#d97706', bg: '#fef3c7' },
-    gray:   { color: '#6b7280', bg: '#f3f4f6' },
-    purple: { color: '#7c3aed', bg: '#ede9fe' },
-    teal:   { color: '#0d9488', bg: '#ccfbf1' },
-    };
+const CONFIG = {
+    draft:     { l: 'Draft',     bg: 'bg-gray-100', text: 'text-gray-600' },
+    submitted: { l: 'Submitted', bg: 'bg-[#f97316]/10', text: 'text-[#f97316]' }, 
+    reviewed:  { l: 'Reviewed',  bg: 'bg-[#1a2b4a]/10', text: 'text-[#1a2b4a]' }, 
+    approved:  { l: 'Approved',  bg: 'bg-green-100', text: 'text-green-700' },
+    revisi:    { l: 'Revisi',    bg: 'bg-red-100', text: 'text-red-700' },
+};
 
-    export default function Badge({ children, color = 'gray', size = 'md', style = {} }) {
-    const c = COLOR_MAP[color] || COLOR_MAP.gray;
-    const padding = size === 'sm' ? '2px 7px' : '3px 10px';
-    const fontSize = size === 'sm' ? '11px' : '12px';
-
+export default function Badge({ status }) {
+    const c = CONFIG[status?.toLowerCase()] || { l: status || 'Unknown', bg: 'bg-gray-100', text: 'text-gray-500' };
+    
     return (
-        <span style={{
-        padding, fontSize, fontWeight: '600',
-        borderRadius: '20px', background: c.bg, color: c.color,
-        whiteSpace: 'nowrap', display: 'inline-block', ...style,
-        }}>
-        {children}
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${c.bg} ${c.text}`}>
+        {c.l}
         </span>
     );
-    }
+}

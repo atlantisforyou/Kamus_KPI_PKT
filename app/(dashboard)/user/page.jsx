@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import StatCard from '@/components/ui/StatCard';
 
 const STATUS_CONFIG = {
   draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
@@ -11,7 +12,7 @@ const STATUS_CONFIG = {
 };
 
 function StatusBadge({ status }) {
-  const s = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
+  const s = STATUS_CONFIG[status?.toLowerCase()] || STATUS_CONFIG.draft;
   return (
     <span style={{
       padding: '3px 10px', borderRadius: '20px', fontSize: '12px',
@@ -54,21 +55,14 @@ export default function UserDashboard() {
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-          gap: 12px; margin-bottom: 28px;
+          gap: 16px; margin-bottom: 28px;
         }
-        .stat-card {
-          background: #fff; border-radius: 12px; padding: 18px 20px;
-          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-          border-left: 4px solid var(--c);
-        }
-        .stat-num { font-size: 28px; font-weight: 700; color: var(--c); }
-        .stat-lbl { font-size: 12px; color: #7a8b9a; margin-top: 3px; font-weight: 500; }
 
         .section-header {
           display: flex; align-items: center; justify-content: space-between;
           margin-bottom: 14px;
         }
-        .section-header h2 { font-size: 16px; font-weight: 700; color: #1a2b4a; }
+        .section-header h2 { font-size: 16px; font-weight: 700; color: #1a2b4a; margin: 0; }
         .link-all {
           font-size: 13px; color: #3b7dd8; font-weight: 600;
           text-decoration: none;
@@ -97,16 +91,6 @@ export default function UserDashboard() {
 
         .kpi-name { font-weight: 600; color: #1a2b4a; }
 
-        /* CTA */
-        .btn-cta {
-          padding: 11px 24px; background: #3b7dd8; color: #fff;
-          border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
-          font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
-          text-decoration: none; white-space: nowrap;
-          transition: background 0.2s;
-        }
-        .btn-cta:hover { background: #2563eb; }
-
         .empty { text-align: center; padding: 40px; color: #7a8b9a; font-size: 14px; }
         .loading { text-align: center; padding: 40px; color: #7a8b9a; font-size: 14px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -118,20 +102,12 @@ export default function UserDashboard() {
       </div>
 
       <div className="stats-grid">
-        {[
-          { label: 'Total KPI', val: stats.total,    c: '#1a2b4a' },
-          { label: 'Draft',     val: stats.draft,    c: '#6b7280' },
-          { label: 'Reviewed',  val: stats.reviewed, c: '#2563eb' },
-          { label: 'Approved',  val: stats.approved, c: '#16a34a' },
-        ].map(s => (
-          <div key={s.label} className="stat-card" style={{ '--c': s.c }}>
-            <div className="stat-num">{s.val}</div>
-            <div className="stat-lbl">{s.label}</div>
-          </div>
-        ))}
+        <StatCard label="Total KPI" value={stats.total} color="#1a2b4a" loading={loading} />
+        <StatCard label="Draft" value={stats.draft} color="#6b7280" loading={loading} />
+        <StatCard label="Reviewed" value={stats.reviewed} color="#2563eb" loading={loading} />
+        <StatCard label="Approved" value={stats.approved} color="#16a34a" loading={loading} />
       </div>
 
-      {/* Tabel KPI Terbaru */}
       <div className="section-header">
         <h2>KPI Terbaru</h2>
         <Link href="/user/kamus" className="link-all">Lihat semua →</Link>

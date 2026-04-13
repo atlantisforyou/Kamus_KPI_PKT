@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import StatCard from '@/components/ui/StatCard';
 
 const Skel = ({ w = '100%', h = '14px', r = '6px' }) => <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />;
 
@@ -18,21 +19,18 @@ const PBar = ({ l, pct, c, tot, app, load }) => (
   </div>
 );
 
-// Konfigurasi warna untuk berbagai jenis notifikasi
 const NOTIF_STYLE = {
-  info:    { bg: '#f8fafc', border: '#3b7dd8' }, // Biru
-  warning: { bg: '#fffbeb', border: '#f59e0b' }, // Kuning
-  success: { bg: '#f0fdf4', border: '#10b981' }, // Hijau
+  info:    { bg: '#f8fafc', border: '#3b7dd8' },
+  warning: { bg: '#fffbeb', border: '#f59e0b' },
+  success: { bg: '#f0fdf4', border: '#10b981' },
 };
 
-// MAIN COMPONENT
 export default function AdminDashboard() {
   const [data, setData] = useState({ stat: null, bsc: [], notices: [], load: true });
 
   useEffect(() => {
     (async () => {
       try {
-        // Tambahkan fetch ke API notifikasi (jangan lupa nanti dibuatkan API-nya!)
         const [rKar, rKam, rNotif] = await Promise.all([
           fetch('/api/karyawan').catch(() => null),
           fetch('/api/kamus?all=true').catch(() => null),
@@ -41,8 +39,6 @@ export default function AdminDashboard() {
 
         const kar = rKar && rKar.ok ? ((await rKar.json()).data || []) : [];
         const kam = rKam && rKam.ok ? ((await rKam.json()).data || []) : [];
-        
-        // Ambil data notif (batasi maksimal 5 terbaru agar kotak tidak kepanjangan)
         const notices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []).slice(0, 5) : [];
         
         const count = (s) => kam.filter(k => k.status === s).length;
@@ -55,7 +51,7 @@ export default function AdminDashboard() {
             const app = inCat.filter(k => k.status === 'approved').length;
             return { l: c, tot: inCat.length, app, pct: inCat.length ? Math.round((app / inCat.length) * 100) : 0 };
           }),
-          notices: notices, // Simpan notifikasi ke state
+          notices: notices,
           load: false
         });
       } catch { setData(p => ({ ...p, load: false })); }
@@ -75,17 +71,21 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}.stat-card{display:flex;flex-direction:column;justify-content:center;background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 1px 8px rgba(0,0,0,.06);text-decoration:none;transition:all .2s}.stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-2px)}.section-card{background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 8px rgba(0,0,0,.06)}.act-link{display:block;font-size:13px;color:#3b7dd8;font-weight:600;padding:5px 0;text-decoration:none;transition:color .15s}.act-link:hover{color:#1a2b4a}.view-all-link{font-size:13px;color:#3b7dd8;font-weight:600;text-decoration:none;transition:opacity 0.2s}.view-all-link:hover{opacity:0.8}@media (max-width: 768px){.bottom-grid{grid-template-columns:1fr !important}}`}</style>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+        .section-card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 1px 8px rgba(0,0,0,.06); }
+        .view-all-link { font-size:13px; color:#3b7dd8; font-weight:600; text-decoration:none; }
+        .view-all-link:hover { opacity:0.8; }
+        @media (max-width: 768px){ .bottom-grid { grid-template-columns:1fr !important; } }
+      `}</style>
+      
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a2b4a', marginBottom: 8 }}>Dashboard Admin</h1>
         <p style={{ color: '#7a8b9a', fontSize: 14, marginBottom: 28 }}>Selamat datang di panel Administrator Kamus KPI.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 28 }}>
           {cards.map(s => (
-            <Link key={s.l} href={s.h} className="stat-card" style={{ borderLeft: `4px solid ${s.c}` }}>
-              <div style={{ fontSize: 32, fontWeight: 800, color: s.c, lineHeight: 1 }}>{load ? <Skel w="50px" h="28px" r="6px" /> : (s.v ?? '-')}</div>
-              <div style={{ fontSize: 13, color: '#7a8b9a', marginTop: 6, fontWeight: 500 }}>{s.l}</div>
-            </Link>
+            <StatCard key={s.l} label={s.l} value={s.v} color={s.c} href={s.h} loading={load} />
           ))}
         </div>
 
@@ -99,7 +99,6 @@ export default function AdminDashboard() {
               bsc.map((p, i) => <PBar key={p.l} l={p.l} pct={p.pct} c={BSC_COLORS[i % BSC_COLORS.length]} tot={p.tot} app={p.app} load={false} />)}
           </div>
 
-          {/* BAGIAN NOTICE BOARD DINAMIS */}
           <div className="section-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Notice board</h2>
@@ -107,16 +106,10 @@ export default function AdminDashboard() {
             </div>
             
             <div style={{ borderTop: '1px solid #f0f4f8', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              
               {load ? (
-                <>
-                  <Skel h="60px" r="8px" />
-                  <Skel h="60px" r="8px" />
-                </>
+                <><Skel h="60px" r="8px" /><Skel h="60px" r="8px" /></>
               ) : notices.length === 0 ? (
-                <div style={{ fontSize: 13, color: '#7a8b9a', textAlign: 'center', padding: '20px 0' }}>
-                  Belum ada pemberitahuan.
-                </div>
+                <div style={{ fontSize: 13, color: '#7a8b9a', textAlign: 'center', padding: '20px 0' }}>Belum ada pemberitahuan.</div>
               ) : (
                 notices.map((n) => {
                   const style = NOTIF_STYLE[n.tipe] || NOTIF_STYLE.info;
@@ -131,10 +124,8 @@ export default function AdminDashboard() {
                   );
                 })
               )}
-
             </div>
           </div>
-
         </div>
       </div>
     </>
