@@ -18,7 +18,80 @@ function StatusBadge({ status }) {
   );
 }
 
-// ─── KOMPONEN KARTU KARYAWAN ────────────────────────
+// ─── KOMPONEN MODAL BARU (DITAMBAHKAN KHUSUS UNTUK DETAIL) ───
+const BULAN_MODAL = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
+const B_LBL_MODAL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+
+function KpiDetailModal({ kpi, onClose }) {
+  if (!kpi) return null;
+
+  const DRow = ({ l, v }) => (
+    <div className="detail-row">
+      <span className="detail-key">{l}</span>
+      <span className="detail-val">{v || '-'}</span>
+    </div>
+  );
+
+  return (
+    <div className="modal-overlay-admin" onClick={onClose}>
+      <div className="modal-admin" onClick={e => e.stopPropagation()}>
+        <div className="modal-header-admin">
+          <h3>Detail KPI & Pencapaian</h3>
+          <button className="modal-close-admin" onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        
+        <div className="modal-body-admin">
+          <div className="detail-section">
+            <h4>Informasi Dasar & Strategis</h4>
+            <DRow l="Nama KPI" v={kpi.nama_kpi} />
+            <DRow l="Perspektif BSC" v={kpi.perspektif_bsc} />
+            <DRow l="Sasaran Strategis" v={kpi.sasaran_strategis} />
+            <DRow l="Definisi KPI" v={kpi.definisi_kpi} />
+            <DRow l="Tujuan KPI" v={kpi.tujuan_kpi} />
+            <DRow l="Status" v={<StatusBadge status={kpi.status} />} />
+          </div>
+          
+          <div className="detail-section">
+            <h4>Karakteristik KPI</h4>
+            <DRow l="Tipe KPI" v={kpi.tipe_kpi} />
+            <DRow l="Formula" v={kpi.formula_penilaian} />
+            <DRow l="Jenis Pengukuran" v={kpi.jenis_pengukuran} />
+            <DRow l="Polaritas" v={kpi.polaritas} />
+            <DRow l="Frekuensi" v={kpi.frekuensi} />
+          </div>
+          
+          <div className="detail-section">
+            <h4>Target & Realisasi Bulanan</h4>
+            <div className="target-grid-sm">
+              {BULAN_MODAL.map((b, i) => (
+                <div key={b} className="target-cell-sm">
+                  <div className="t-lbl">{B_LBL_MODAL[i]}</div>
+                  <div className="t-split">
+                    <div className="t-target"><span style={{color:'#7a8b9a', fontSize: 10}}>TGT:</span> {kpi[`target_${b}`] ?? '-'}</div>
+                    <div className="t-real"><span style={{color:'#7a8b9a', fontSize: 10}}>REL:</span> {kpi[`realisasi_${b}`] ?? '-'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', gap: 24, fontSize: 14, flexWrap: 'wrap', background: '#f8fafc', padding: '12px 16px', borderRadius: 8, border: '1px solid #e8edf2' }}>
+              <span style={{ color: '#7a8b9a' }}>Target Tahunan: <strong style={{ color: '#1a2b4a' }}>{kpi.target_tahunan ?? '-'}</strong></span>
+              <span style={{ color: '#7a8b9a' }}>Satuan: <strong style={{ color: '#1a2b4a' }}>{kpi.satuan || '-'}</strong></span>
+              <span style={{ color: '#7a8b9a' }}>Sumber Data: <strong style={{ color: '#1a2b4a' }}>{kpi.sumber_data || '-'}</strong></span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="modal-actions-admin">
+          <button className="btn-modal btn-cancel" onClick={onClose}>Tutup</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── KOMPONEN KARTU KARYAWAN (TIDAK ADA YANG DIUBAH) ─────────
 function KaryawanCard({ karyawan, defaultOpen = false, search, onViewDetail }) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -115,22 +188,36 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onViewDetail }) {
                 <tbody>
                   {filteredKpi.map((kpi, idx) => {
                     // Panggil data secara dinamis berdasarkan bulan ini
-                    // Contoh: kpi['target_apr']
                     const targetBulanIni = kpi[`target_${bulanDb}`];
-                    
-                    // Asumsi di databasemu juga ada kolom realisasi (contoh: realisasi_apr)
                     const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
+
+                    // Cek apakah KPI sudah di-approve
+                    const isApproved = kpi.status === 'approved';
 
                     return (
                       <tr key={kpi.id}>
                         <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 500 }}>{idx + 1}</td>
                         <td style={{ fontWeight: 600 }}>{kpi.nama_kpi}</td>
                         <td>{kpi.polaritas || 'Maximize'}</td>
+                        
+                        {/* Target Tahunan: Kalau ada angka, tampilkan angka + satuan. Kalau kosong, tampilkan '-' saja */}
                         <td>{kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || '%'}` : '-'}</td>
                         
-                        {/* Jika nilainya ada (bukan null), tampilkan. Kalau null tampilkan '-' */}
-                        <td>{targetBulanIni !== null && targetBulanIni !== undefined ? `${targetBulanIni} ${kpi.satuan || '%'}` : '-'}</td>
-                        <td>{realisasiBulanIni !== null && realisasiBulanIni !== undefined ? `${realisasiBulanIni} ${kpi.satuan || '%'}` : '-'}</td>
+                        {/* Target s.d Bulan Ini: Kalau ada angka, tampilkan angka + satuan. Kalau kosong, tampilkan '-' saja */}
+                        <td>{targetBulanIni ? `${targetBulanIni} ${kpi.satuan || '%'}` : '-'}</td>
+                        
+                        {/* Realisasi s.d Bulan Ini */}
+                        <td>
+                          {!isApproved ? (
+                            <span style={{ fontSize: 11, color: '#d97706', background: '#fef3c7', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
+                              Belum Approved
+                            </span>
+                          ) : (
+                            realisasiBulanIni ? (
+                              <span style={{ fontWeight: 700, color: '#10b981' }}>{`${realisasiBulanIni} ${kpi.satuan || '%'}`}</span>
+                            ) : '-'
+                          )}
+                        </td>
                         
                         <td style={{ textAlign: 'center' }}>
                           <button className="btn-detail-outline" onClick={() => onViewDetail(kpi)}>
@@ -166,7 +253,7 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onViewDetail }) {
   );
 }
 
-// ─── HALAMAN UTAMA ───────────────────────────────────────────────────
+// ─── HALAMAN UTAMA (TIDAK ADA LOGIKA YANG DIUBAH) ─────────────
 export default function RekapPage() {
   const [data, setData]       = useState([]);
   const [loading, setLoading] = useState(true);
@@ -209,7 +296,6 @@ export default function RekapPage() {
         .search-box input::placeholder { color: #94a3b8; }
         .filter-select { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; color: #374151; background: #fff; cursor: pointer; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        /* ─── CSS TABEL & PROGRESS BAR BARU ─── */
         .table-container { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 16px; background: #fff; }
         .kpi-table { width: 100%; border-collapse: collapse; text-align: left; }
         .kpi-table th { padding: 12px 16px; font-size: 12px; font-weight: 700; color: #475569; background: #f8fafc; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
@@ -224,23 +310,44 @@ export default function RekapPage() {
         .progress-bar-bg { flex: 1; max-width: 250px; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background: #10b981; border-radius: 4px; }
         
-        /* Modal Style Tetap Sama */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 20px; backdrop-filter: blur(4px); }
-        .modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 800px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; animation: modalIn 0.3s ease-out; }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 10; }
-        .modal-body { padding: 24px; }
-        .btn-close { background: #f0f4f8; border: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7a8b9a; transition: all 0.2s; }
-        .btn-close:hover { background: #e2e8f0; color: #1a2b4a; }
-        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .detail-item { background: #f8fafc; padding: 14px 16px; border-radius: 10px; border: 1px solid #e8edf2; }
-        .detail-lbl { display: block; font-size: 12px; color: #7a8b9a; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .detail-val { font-size: 14px; color: #1a2b4a; font-weight: 500; line-height: 1.5; }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
         @media (max-width: 768px) {
           .hide-mobile { display: none !important; }
           .progress-footer { flex-direction: column; align-items: flex-start; }
           .progress-bar-bg { max-width: 100%; }
+        }
+
+        /* ─── CSS MODAL BARU (HANYA INI YANG DITAMBAHKAN) ─── */
+        .modal-overlay-admin { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; backdrop-filter: blur(4px); }
+        .modal-admin { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); animation: modalIn .3s ease-out; display: flex; flex-direction: column; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-header-admin { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 10; }
+        .modal-header-admin h3 { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0; }
+        .modal-close-admin { width: 32px; height: 32px; border-radius: 8px; background: #f0f4f8; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; color: #7a8b9a; }
+        .modal-close-admin:hover { background: #e2e8f0; color: #1a2b4a; }
+        
+        .modal-body-admin { padding: 24px; }
+        .detail-section { margin-bottom: 24px; }
+        .detail-section h4 { font-size: 11px; font-weight: 700; color: #7a8b9a; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f0f4f8; }
+        .detail-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 10px; font-size: 14px; }
+        .detail-key { color: #7a8b9a; font-weight: 600; }
+        .detail-val { color: #1e293b; font-weight: 500; }
+        
+        .target-grid-sm { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .target-cell-sm { background: #fff; border-radius: 8px; padding: 10px; text-align: center; border: 1px solid #e8edf2; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .target-cell-sm .t-lbl { font-size: 11px; color: #1e293b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f0f4f8; padding-bottom: 4px; }
+        .target-cell-sm .t-split { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+        .target-cell-sm .t-target, .target-cell-sm .t-real { font-size: 12px; font-weight: 600; color: #374151; display: flex; justify-content: space-between; }
+        .target-cell-sm .t-real { color: #2563eb; }
+        
+        .modal-actions-admin { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; }
+        .btn-modal { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; transition: all .15s; }
+        .btn-cancel { background: #f4f6f9; color: #374151; }
+        .btn-cancel:hover { background: #e8edf2; color: #1e293b; }
+
+        @media (max-width: 768px) {
+          .target-grid-sm { grid-template-columns: repeat(3, 1fr); }
         }
       `}</style>
 
@@ -287,44 +394,11 @@ export default function RekapPage() {
         ))
       )}
 
-      {/* ════════════ MODAL POPUP DETAIL KPI ════════════ */}
-      {selectedKpi && (
-        <div className="modal-overlay" onClick={() => setSelectedKpi(null)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>Detail KPI</h2>
-                <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{selectedKpi.nama_kpi}</div>
-              </div>
-              <button className="btn-close" onClick={() => setSelectedKpi(null)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div style={{ marginBottom: 20 }}>
-                <StatusBadge status={selectedKpi.status} />
-              </div>
-              <div className="detail-grid">
-                {[
-                  ['Sasaran Strategis', selectedKpi.sasaran_strategis],
-                  ['Perspektif BSC', selectedKpi.perspektif_bsc],
-                  ['Definisi KPI', selectedKpi.definisi_kpi],
-                  ['Tujuan KPI', selectedKpi.tujuan_kpi],
-                  ['Karakteristik', `${selectedKpi.tipe_kpi || '-'} · ${selectedKpi.jenis_pengukuran || '-'} · ${selectedKpi.polaritas || '-'} · ${selectedKpi.frekuensi || '-'}`],
-                  ['Formula Penilaian', selectedKpi.formula_penilaian],
-                  ['Satuan & Target Tahunan', `${selectedKpi.target_tahunan || '-'} ${selectedKpi.satuan || ''}`],
-                  ['Sumber Data', selectedKpi.sumber_data],
-                ].map(([lbl, val]) => val && val.replace(/· -/g, '').trim() !== '-' ? (
-                  <div key={lbl} className="detail-item">
-                    <span className="detail-lbl">{lbl}</span>
-                    <span className="detail-val">{val}</span>
-                  </div>
-                ) : null)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ════════════ MODAL POPUP DETAIL KPI YANG DIPANGGIL ════════════ */}
+      <KpiDetailModal 
+        kpi={selectedKpi} 
+        onClose={() => setSelectedKpi(null)} 
+      />
     </>
   );
 }

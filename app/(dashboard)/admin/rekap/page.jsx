@@ -155,40 +155,69 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
           {filteredKpi.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '13px' }}>Tidak ada KPI.</div>
           ) : (
-            <div className="table-responsive">
-              <table className="kpi-table">
-                <thead>
-                  <tr>
-                    <th width="5%">No</th>
-                    <th width="30%">Detail KPI</th>
-                    <th width="15%">Polaritas</th>
-                    <th width="15%">Target Total</th>
-                    <th width="10%">Target s.d Jan</th>
-                    <th width="15%">Realisasi s.d Jan</th>
-                    <th width="10%">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredKpi.map((kpi, idx) => (
-                    <tr key={kpi.id || idx}>
-                      <td style={{ fontWeight: 600, color: '#64748b' }}>{idx + 1}</td>
-                      <td style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</td>
-                      <td>{kpi.polaritas || '-'}</td>
-                      <td style={{ fontWeight: 600 }}>{kpi.target_tahunan || '-'} {kpi.satuan || ''}</td>
-                      <td>{kpi.target_jan || '-'} {kpi.satuan || ''}</td>
-                      <td>{kpi.realisasi_jan || '-'} {kpi.satuan || ''}</td>
-                      <td>
-                        <button 
-                          className="btn-detail"
-                          onClick={() => onOpenModal(kpi)}
-                        >
-                          {Ico.Detail} Detail
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="table-responsive">
+              {/* Ambil index bulan saat ini secara otomatis */}
+              {(() => {
+                const indexBulanIni = new Date().getMonth(); // 3 untuk April
+                const bulanDb = BULAN[indexBulanIni]; // 'apr'
+                const labelBulan = B_LBL[indexBulanIni]; // 'Apr'
+
+                return (
+                  <table className="kpi-table">
+                    <thead>
+                      <tr>
+                        <th width="5%">No</th>
+                        <th width="30%">Detail KPI</th>
+                        <th width="15%">Polaritas</th>
+                        <th width="15%">Target Total</th>
+                        {/* Header otomatis berubah sesuai bulan saat ini */}
+                        <th width="10%">Target s.d {labelBulan}</th>
+                        <th width="15%">Realisasi s.d {labelBulan}</th>
+                        <th width="10%">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredKpi.map((kpi, idx) => {
+                        // Tarik data dinamis sesuai bulan ini
+                        const targetBulanIni = kpi[`target_${bulanDb}`];
+                        const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
+
+                        return (
+                          <tr key={kpi.id || idx}>
+                            <td style={{ fontWeight: 600, color: '#64748b' }}>{idx + 1}</td>
+                            <td style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</td>
+                            <td>{kpi.polaritas || '-'}</td>
+                            
+                            {/* Target Tahunan */}
+                            <td style={{ fontWeight: 600 }}>
+                              {kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || ''}` : '-'}
+                            </td>
+                            
+                            {/* Target Bulan Ini */}
+                            <td>
+                              {targetBulanIni ? `${targetBulanIni} ${kpi.satuan || ''}` : '-'}
+                            </td>
+                            
+                            {/* Realisasi Bulan Ini */}
+                            <td>
+                              {realisasiBulanIni ? `${realisasiBulanIni} ${kpi.satuan || ''}` : '-'}
+                            </td>
+                            
+                            <td>
+                              <button 
+                                className="btn-detail"
+                                onClick={() => onOpenModal(kpi)}
+                              >
+                                {Ico.Detail} Detail
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           )}
 
