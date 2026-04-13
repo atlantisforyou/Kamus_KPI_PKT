@@ -86,7 +86,7 @@ export default function ApprovalManajemenPage() {
     if (!confirm(`Apakah Anda yakin ingin ${act === 'approve' ? 'MENYETUJUI' : 'MENGEMBALIKAN (REVISI)'} KPI: "${nama}"?`)) return;
     setUi(p => ({ ...p, proc: id }));
     try {
-      const r = await fetch(`/api/kamus/${id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: act }) });
+      const r = await fetch(`/api/kamus/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: act }) });
       if (!r.ok) throw new Error((await r.json()).error || 'Gagal memproses');
       alert(act === 'approve' ? 'KPI Berhasil Disetujui!' : 'KPI Dikembalikan untuk Revisi!');
       setUi(p => ({ ...p, sel: null })); fetchD();

@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 const BSC = ['Financial', 'Customer', 'Internal Process', 'Learning & Growth'];
 const TIPE = ['Leading', 'Lagging'];
 const JENIS = ['Average', 'Sum', 'Take Last Known'];
@@ -49,9 +51,97 @@ export const TextArea = ({ value, onChange, placeholder, rows = 4 }) => (
 export const SelectInput = ({ value, onChange, placeholder, options }) => (
   <select value={value || ''} onChange={onChange} style={{ ...baseInput, color: value ? '#000' : '#6b7280', cursor: 'pointer' }} onFocus={focus} onBlur={blur}>
     <option value="" disabled>{placeholder}</option>
+    <option value="">- Kosongkan -</option>
     {options.map(o => <option key={o.v || o} value={o.v || o}>{o.l || o}</option>)}
   </select>
 );
+
+// ─── KOMPONEN AUTOCOMPLETE SASARAN KHUSUS ───────────────────────────────
+export function AutocompleteSasaran({ value, onChange }) {
+  const [query, setQuery] = useState(value || '');
+  const [pilihan, setPilihan] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [bukaDropdown, setBukaDropdown] = useState(false);
+
+  useEffect(() => {
+    setQuery(value || '');
+  }, [value]);
+
+  const handleKetik = async (e) => {
+    const teks = e.target.value;
+    setQuery(teks);
+    onChange(teks); // Kirim teks ke state form utama
+
+    if (teks.length >= 3) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/kamus?type=sasaran&q=${encodeURIComponent(teks)}`);
+        const data = await res.json();
+        setPilihan(data);
+        setBukaDropdown(true);
+      } catch (error) {
+        console.error("Gagal cari sasaran:", error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setBukaDropdown(false);
+      setPilihan([]);
+    }
+  };
+
+  const handlePilih = (teksSasaran) => {
+    setQuery(teksSasaran);
+    onChange(teksSasaran); // Update isi form
+    setBukaDropdown(false); // Tutup dropdown
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <input
+        type="text"
+        value={query}
+        onChange={handleKetik}
+        placeholder="Ketik untuk mencari sasaran strategis..."
+        style={baseInput}
+        onFocus={(e) => {
+          focus(e);
+          if (query.length >= 3 && pilihan.length > 0) setBukaDropdown(true);
+        }}
+        onBlur={(e) => {
+          blur(e);
+          setBukaDropdown(false); // Menutup dropdown saat klik di luar area
+        }}
+      />
+      
+      {loading && <div style={{ position: 'absolute', right: 14, top: 12, fontSize: 12, color: '#7a8b9a' }}>Mencari...</div>}
+
+      {bukaDropdown && pilihan.length > 0 && (
+        <ul style={{
+          position: 'absolute', zIndex: 50, width: '100%', background: '#fff', 
+          border: '1.5px solid #e5eaf0', borderRadius: 8, marginTop: 4,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 250, overflowY: 'auto',
+          listStyle: 'none', padding: 0
+        }}>
+          {pilihan.map((item) => (
+            <li 
+              key={item.id} 
+              onMouseDown={() => handlePilih(item.sasaran)} // Pakai onMouseDown agar tidak kalah cepat dengan onBlur input
+              style={{ padding: '10px 14px', borderBottom: '1px solid #f0f4f8', cursor: 'pointer', fontSize: 13 }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+            >
+              <div style={{ fontWeight: 700, color: '#3b7dd8', marginBottom: 4, fontSize: 11, textTransform: 'uppercase' }}>
+                {item.bidang}
+              </div>
+              <div style={{ color: '#374151', lineHeight: 1.4 }}>{item.sasaran}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 // ─── 1. FORM INFORMASI DASAR ────────────────────────────────────────────
 export function InformasiDasarForm({ form, set }) {
@@ -60,9 +150,11 @@ export function InformasiDasarForm({ form, set }) {
       <FieldRow label="Perspektif Balanced Scorecard" req>
         <SelectInput value={form.perspektif_bsc} onChange={set('perspektif_bsc')} placeholder="Pilih Perspektif..." options={BSC} />
       </FieldRow>
+      
       <FieldRow label="Sasaran Strategis">
-        <TextInput value={form.sasaran_strategis} onChange={set('sasaran_strategis')} placeholder="Ketik Sasaran Strategis..." />
+        <AutocompleteSasaran value={form.sasaran_strategis} onChange={set('sasaran_strategis')} />
       </FieldRow>
+      
       <FieldRow label="Nama KPI" req>
         <TextInput value={form.nama_kpi} onChange={set('nama_kpi')} placeholder="Contoh: Akurasi Laporan Keuangan" />
       </FieldRow>

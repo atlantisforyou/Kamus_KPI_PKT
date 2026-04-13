@@ -15,7 +15,305 @@ const Ico = {
   EyeOff:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
 };
 
-const CSS = `@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Merriweather:wght@700&display=swap');*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f4f8}.page{min-height:100vh;display:flex;background:#f0f4f8}.left{width:45%;background:linear-gradient(135deg,rgba(26,43,74,.92),rgba(26,43,74,.85)),url('${homeBg.src}');background-size:cover;background-position:center;display:flex;flex-direction:column;justify-content:space-between;padding:52px 56px;position:relative;overflow:hidden}.left::before{content:'';position:absolute;top:-120px;right:-120px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.04)}.left::after{content:'';position:absolute;bottom:-80px;left:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.03)}.brand{display:flex;align-items:center;gap:14px;z-index:1}.brand-icon{width:312.5px;height:100px;display:flex;align-items:center;justify-content:center}.brand-icon img{width:100%;height:100%;object-fit:contain}.hero-text{z-index:1}.hero-text h1{font-family:Merriweather,serif;font-size:36px;color:#fff;line-height:1.3;margin-bottom:20px;letter-spacing:-.5px}.hero-text h1 span{color:#6aaff5}.hero-text p{font-size:15px;color:rgba(255,255,255,.55);line-height:1.7;max-width:320px}.right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}.card{background:#fff;border-radius:20px;padding:48px 44px;width:100%;max-width:420px;box-shadow:0 4px 40px rgba(0,0,0,.08);position:relative}.card-header{margin-bottom:36px}.card-header h2{font-size:26px;font-weight:700;color:#0f1c2e;letter-spacing:-.5px;margin-bottom:8px}.card-header p{font-size:14px;color:#7a8b9a;line-height:1.5}.field{margin-bottom:20px}.field label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;letter-spacing:.2px}.field input{width:100%;padding:13px 16px;border:1.5px solid #e5eaf0;border-radius:10px;font-size:15px;font-family:'Plus Jakarta Sans',sans-serif;color:#0f1c2e;background:#fafbfc;transition:all .2s;outline:0}.field input::placeholder{color:#b0bcc8}.field input:focus{border-color:#3b7dd8;background:#fff;box-shadow:0 0 0 3px rgba(59,125,216,.12)}.link-forgot{display:block;text-align:right;font-size:13px;font-weight:600;color:#3b7dd8;text-decoration:none;margin-top:-10px;margin-bottom:20px;cursor:pointer;transition:color .2s}.link-forgot:hover{color:#243d6a;text-decoration:underline}.link-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#7a8b9a;cursor:pointer;margin-bottom:24px;transition:color .2s}.link-back:hover{color:#3b7dd8}.error-box,.success-box{border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px}.error-box{background:#fff5f5;border:1px solid #fecaca}.error-box span{font-size:13px;color:#dc2626;font-weight:500}.success-box{background:#ecfdf5;border:1px solid #a7f3d0}.success-box span{font-size:13px;color:#059669;font-weight:500}.btn-primary{width:100%;padding:14px;background:#f4623a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.2px;margin-top:8px}.btn-primary:hover:not(:disabled){background:#243d6a;box-shadow:0 4px 16px rgba(26,43,74,.25)}.btn-primary:active:not(:disabled){transform:scale(.99)}.btn-primary:disabled{opacity:.6;cursor:not-allowed}.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@media (max-width:768px){.page{flex-direction:column}.left{width:100%;padding:36px 28px;min-height:auto}.hero-text h1{font-size:26px}.right{padding:28px 20px}.card{padding:32px 24px}}`;
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Merriweather:wght@700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #f0f4f8;
+}
+
+/* Menyembunyikan ikon mata bawaan browser Edge/IE */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  background: #f0f4f8;
+}
+
+.left {
+  width: 45%;
+  background: linear-gradient(135deg, rgba(26,43,74,.92), rgba(26,43,74,.85)), url('${homeBg.src}');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 52px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+.left::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.04);
+}
+
+.left::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.03);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 1;
+}
+
+.brand-icon {
+  width: 312.5px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hero-text {
+  z-index: 1;
+}
+
+.hero-text h1 {
+  font-family: Merriweather, serif;
+  font-size: 36px;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 20px;
+  letter-spacing: -.5px;
+}
+
+.hero-text h1 span {
+  color: #6aaff5;
+}
+
+.hero-text p {
+  font-size: 15px;
+  color: rgba(255,255,255,.55);
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 40px rgba(0,0,0,.08);
+  position: relative;
+}
+
+.card-header {
+  margin-bottom: 36px;
+}
+
+.card-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f1c2e;
+  letter-spacing: -.5px;
+  margin-bottom: 8px;
+}
+
+.card-header p {
+  font-size: 14px;
+  color: #7a8b9a;
+  line-height: 1.5;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  letter-spacing: .2px;
+}
+
+.field input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid #e5eaf0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #0f1c2e;
+  background: #fafbfc;
+  transition: all .2s;
+  outline: 0;
+}
+
+.field input::placeholder {
+  color: #b0bcc8;
+}
+
+.field input:focus {
+  border-color: #3b7dd8;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59,125,216,.12);
+}
+
+.link-forgot {
+  display: block;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b7dd8;
+  text-decoration: none;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.link-forgot:hover {
+  color: #243d6a;
+  text-decoration: underline;
+}
+
+.link-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a8b9a;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: color .2s;
+}
+
+.link-back:hover {
+  color: #3b7dd8;
+}
+
+.error-box,
+.success-box {
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-box {
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+}
+
+.error-box span {
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.success-box {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.success-box span {
+  font-size: 13px;
+  color: #059669;
+  font-weight: 500;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: #f4623a;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: .2px;
+  margin-top: 8px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #243d6a;
+  box-shadow: 0 4px 16px rgba(26,43,74,.25);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(.99);
+}
+
+.btn-primary:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .page { flex-direction: column; }
+  .left { width: 100%; padding: 36px 28px; min-height: auto; }
+  .hero-text h1 { font-size: 26px; }
+  .right { padding: 28px 20px; }
+  .card { padding: 32px 24px; }
+}
+`;
 
 const Fld = ({ l, val, onChange, t = "text", p, max, st, autoF, isPass, show, onToggle }) => (
   <div className="field">
@@ -111,7 +409,7 @@ export default function LoginPage() {
         <div className="left">
           <div className="brand"><div className="brand-icon"><img src={logoPkt.src} alt="Logo PKT" /></div></div>
           <div className="hero-text">
-            <h1>Sistem Pengelolaan <span>Indikator Kinerja</span> Perusahaan</h1>
+            <h1>Sistem Informasi <span>Kamus Indikator Kinerja</span> Perusahaan</h1>
             <p>Platform terpadu untuk mendefinisikan, mereview, dan menyetujui Key Performance Indicator secara terstruktur.</p>
           </div>
         </div>

@@ -11,6 +11,24 @@ export async function GET(request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
+    
+    // ════════════ TAMBAHAN: FITUR PENCARIAN SASARAN ════════════
+    const type = searchParams.get('type');
+    const keyword = searchParams.get('q');
+
+    // Jika request memiliki parameter ?type=sasaran, jalankan query ke master_sasaran
+    if (type === 'sasaran') {
+      if (!keyword) return NextResponse.json([]); // Kalau input kosong, kembalikan array kosong
+
+      const querySasaran = `SELECT id, bidang, sasaran FROM master_sasaran WHERE sasaran LIKE ? LIMIT 10`;
+      const [hasilSasaran] = await db.execute(querySasaran, [`%${keyword}%`]);
+      
+      // Langsung return hasilnya dan hentikan proses GET di sini
+      return NextResponse.json(hasilSasaran);
+    }
+    // ════════════════════════════════════════════════════════════
+
+    // --- KODE ASLI UNTUK MENGAMBIL LIST KAMUS KPI ---
     const statusFilter = searchParams.get('status');
 
     let query = '';

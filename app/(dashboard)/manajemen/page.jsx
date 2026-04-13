@@ -4,11 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const STATUS_CONFIG = {
-  draft:     { label: 'Draft',      color: '#6b7280', bg: '#f3f4f6' },
-  submitted: { label: 'Review',     color: '#d97706', bg: '#fef3c7' }, 
-  reviewed:  { label: 'Reviewed',   color: '#2563eb', bg: '#dbeafe' }, 
-  revisi:    { label: 'Revisi',     color: '#dc2626', bg: '#fef2f2' }, 
-  approved:  { label: 'Approve',    color: '#16a34a', bg: '#dcfce7' }, 
+  draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
+  submitted: { label: 'Submitted', color: '#d97706', bg: '#fef3c7' },
+  reviewed:  { label: 'Reviewed',  color: '#2563eb', bg: '#dbeafe' },
+  approved:  { label: 'Approved',  color: '#16a34a', bg: '#dcfce7' },
 };
 
 function StatusBadge({ status }) {

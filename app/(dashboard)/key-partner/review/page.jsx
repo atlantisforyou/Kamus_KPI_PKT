@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const STAT_CFG = {
-  draft:     { l: 'Draft',    c: '#6b7280', bg: '#f3f4f6' },
-  submitted: { l: 'Review',   c: '#d97706', bg: '#fef3c7' }, 
-  reviewed:  { l: 'Reviewed', c: '#2563eb', bg: '#dbeafe' }, 
-  revisi:    { l: 'Revisi',   c: '#dc2626', bg: '#fef2f2' }, 
-  approved:  { l: 'Approve',  c: '#16a34a', bg: '#dcfce7' }, 
+const STATUS_CONFIG = {
+  draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
+  submitted: { label: 'Submitted', color: '#d97706', bg: '#fef3c7' },
+  reviewed:  { label: 'Reviewed',  color: '#2563eb', bg: '#dbeafe' },
+  approved:  { label: 'Approved',  color: '#16a34a', bg: '#dcfce7' },
 };
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];

@@ -14,12 +14,11 @@ const INIT_FORM = {
   validitas: '', nilai_maksimum: '',
 };
 
-const STAT_CFG = {
-  draft:     { l: 'Draft',     c: '#6b7280', bg: '#f3f4f6' },
-  submitted: { l: 'Submitted', c: '#d97706', bg: '#fef3c7' }, 
-  reviewed:  { l: 'Reviewed',  c: '#2563eb', bg: '#dbeafe' }, 
-  approved:  { l: 'Approved',  c: '#16a34a', bg: '#dcfce7' },
-  revisi:    { l: 'Revisi',    c: '#dc2626', bg: '#fef2f2' }, 
+const STATUS_CONFIG = {
+  draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
+  submitted: { label: 'Submitted', color: '#d97706', bg: '#fef3c7' },
+  reviewed:  { label: 'Reviewed',  color: '#2563eb', bg: '#dbeafe' },
+  approved:  { label: 'Approved',  color: '#16a34a', bg: '#dcfce7' },
 };
 
 const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
@@ -36,7 +35,7 @@ const Ico = {
 };
 
 const StatBadge = ({ s }) => {
-  const c = STAT_CFG[s] || STAT_CFG.draft;
+  const c = STATUS_CONFIG[s] || STATUS_CONFIG.draft;
   return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: c.bg, color: c.c }}>{c.l}</span>;
 };
 
@@ -155,7 +154,7 @@ export default function MonitoringPage() {
 const handleReview = async (id, nama) => {
     if (!confirm(`Tandai KPI "${nama}" sebagai Reviewed dan teruskan ke manajemen?`)) return;
     try {
-      const r = await fetch(`/api/kamus/${id}/approve`, { 
+      const r = await fetch(`/api/kamus/${id}`, { 
         method: 'PATCH', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ status: 'reviewed' }) 
@@ -169,6 +168,25 @@ const handleReview = async (id, nama) => {
       showToast('Gagal memproses KPI', 'error'); 
     }
   };
+
+const handleRevisi = async (id, nama) => {
+  if (!confirm(`Tandai KPI "${nama}" untuk direvisi?`)) return;
+  
+  try {
+    const r = await fetch(`/api/kamus/${id}/revisi`, { 
+      method: 'PATCH', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ status: 'revisi' }) 
+    });
+    
+    if (!r.ok) throw new Error();
+    
+    showToast(`KPI "${nama}" berhasil dikembalikan untuk revisi`);
+    fetchKamus();
+  } catch { 
+    showToast('Gagal memproses revisi KPI', 'error'); 
+  }
+};
 
   const setFormField = (key) => (e) => {
     const val = e.target ? e.target.value : e;
@@ -299,7 +317,7 @@ const handleReview = async (id, nama) => {
             </div>
             <select className="filter-select" value={filter.stat} onChange={e => setFilter(p => ({ ...p, stat: e.target.value }))}>
               <option value="">Semua Status</option>
-              {Object.entries(STAT_CFG).map(([k, v]) => <option key={k} value={k}>{v.l}</option>)}
+              {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.l}</option>)}
             </select>
             <div style={{ padding: '10px 16px', background: '#f4f6f9', borderRadius: 10, fontSize: 13, color: '#7a8b9a', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
               <strong style={{ color: '#1a2b4a', marginRight: 4 }}>{filtered.length}</strong> KPI

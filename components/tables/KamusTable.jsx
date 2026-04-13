@@ -1,15 +1,15 @@
 'use client';
 
-const ST = {
-    draft:     { l: 'Draft',     c: '#6b7280', bg: '#f3f4f6' },
-    submitted: { l: 'Submitted', c: '#d97706', bg: '#fef3c7' }, 
-    reviewed:  { l: 'Reviewed',  c: '#2563eb', bg: '#dbeafe' }, 
-    approved:  { l: 'Approved',  c: '#16a34a', bg: '#dcfce7' },
+const STATUS_CONFIG = {
+    draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
+    submitted: { label: 'Submitted', color: '#d97706', bg: '#fef3c7' },
+    reviewed:  { label: 'Reviewed',  color: '#2563eb', bg: '#dbeafe' },
+    approved:  { label: 'Approved',  color: '#16a34a', bg: '#dcfce7' },
 };
 
 export const StatusBadge = ({ status }) => {
-    const { l, c, bg } = ST[status] || ST.draft;
-    return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color: c, whiteSpace: 'nowrap' }}>{l}</span>;
+    const { label, color, bg } = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
+    return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color, whiteSpace: 'nowrap' }}>{label}</span>;
 };
 
 const fmtTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';

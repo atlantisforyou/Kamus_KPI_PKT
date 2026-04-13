@@ -18,7 +18,7 @@ const PBar = ({ l, pct, c, tot, app, load }) => (
   </div>
 );
 
-// ─── MAIN COMPONENT ─────────────────────────────────────────────
+// MAIN COMPONENT
 export default function AdminDashboard() {
   const [data, setData] = useState({ stat: null, bsc: [], load: true });
 
