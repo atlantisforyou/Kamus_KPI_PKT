@@ -20,9 +20,9 @@ export async function POST(request) {
         let rows;
 
         if (isAdmin) {
-            [rows] = await db.execute(`SELECT id, npk, nama, password, role, unit_kerja, is_active FROM karyawan WHERE role = 'admin' LIMIT 1`);
+            [rows] = await db.execute(`SELECT id, npk, nama, password, role, unit_kerja, is_active, departemen_id, kompartemen_id, direktorat_id FROM karyawan WHERE role = 'admin' LIMIT 1`);
         } else {
-            [rows] = await db.execute(`SELECT id, npk, nama, password, role, unit_kerja, is_active FROM karyawan WHERE npk = ?`, [npk.trim().toUpperCase()]);
+            [rows] = await db.execute(`SELECT id, npk, nama, password, role, unit_kerja, is_active, departemen_id, kompartemen_id, direktorat_id FROM karyawan WHERE npk = ?`, [npk.trim().toUpperCase()]);
         }
 
         if (rows.length === 0) {
@@ -61,6 +61,9 @@ export async function POST(request) {
             nama: karyawan.nama,
             role: karyawan.role,
             unit_kerja: karyawan.unit_kerja,
+            departemen_id: karyawan.departemen_id,
+            kompartemen_id: karyawan.kompartemen_id,
+            direktorat_id: karyawan.direktorat_id,
         });
 
         const redirectMap = {

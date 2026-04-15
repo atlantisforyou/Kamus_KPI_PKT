@@ -47,19 +47,52 @@ export async function GET(request) {
                  ORDER BY k.created_at DESC`;
       }
 
-    } else if (user.role === 'key_partner' || user.role === 'manajemen') {
-      // Key Partner & Manajemen: hanya lihat KPI dari unit kerja yang sama
+} else if (user.role === 'key_partner') {
+      // ════ Key Partner: hanya lihat KPI dari unit kerja yang sama ════
       if (statusFilter) {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ? AND k.status = ?
-                 ORDER BY k.created_at DESC`;
+                 WHERE p.unit_kerja = ? AND k.status = ? ORDER BY k.created_at DESC`;
         params = [user.unit_kerja, statusFilter];
       } else {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ?
+                 WHERE p.unit_kerja = ? ORDER BY k.created_at DESC`;
+        params = [user.unit_kerja];
+      }
+
+    } else if (user.role === 'manajemen') {
+      // ════ Manajemen: HIERARKI APPROVAL ════
+      let filterStatusSql = statusFilter ? `AND k.status = '${statusFilter}'` : '';
+
+      if (user.departemen_id) {
+        // LEVEL VP: Tarik kamus milik 'user' biasa di departemen yang sama
+        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 WHERE p.departemen_id = ? AND p.role = 'user' ${filterStatusSql}
                  ORDER BY k.created_at DESC`;
+        params = [user.departemen_id];
+
+      } else if (user.kompartemen_id) {
+        // LEVEL SVP: Tarik kamus milik VP ('manajemen' yg punya departemen) di kompartemen yang sama
+        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 WHERE p.kompartemen_id = ? AND p.role = 'manajemen' AND p.departemen_id IS NOT NULL ${filterStatusSql}
+                 ORDER BY k.created_at DESC`;
+        params = [user.kompartemen_id];
+
+      } else if (user.direktorat_id) {
+        // LEVEL DIREKTUR: Tarik kamus milik SVP ('manajemen' yg tidak punya departemen) di direktorat yg sama
+        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 WHERE p.direktorat_id = ? AND p.role = 'manajemen' AND p.kompartemen_id IS NOT NULL AND p.departemen_id IS NULL ${filterStatusSql}
+                 ORDER BY k.created_at DESC`;
+        params = [user.direktorat_id];
+      } else {
+        // Fallback jika unit kerja tidak terdeteksi
+        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 WHERE p.unit_kerja = ? ${filterStatusSql} ORDER BY k.created_at DESC`;
         params = [user.unit_kerja];
       }
 

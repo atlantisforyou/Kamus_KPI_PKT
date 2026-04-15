@@ -65,19 +65,19 @@ function DetailModal({ k, onClose }) {
   );
 }
 
-// ─── HALAMAN UTAMA ──────────────────────────────────────────────
+// HALAMAN UTAMA
 export default function ApprovalManajemenPage() {
   const [data, setData] = useState([]);
   const [ui, setUi]     = useState({ ld: true, proc: null, sel: null });
 
   const fetchD = async () => {
-    setUi(p => ({ ...p, ld: true }));
-    try {
-      const r = await fetch('/api/kamus?all=true', { cache: 'no-store' });
-      const d = await r.json();
-      setData((d.data || []).filter(k => k.status === 'reviewed'));
-    } catch (e) { console.error("Gagal memuat:", e); } 
-    finally { setUi(p => ({ ...p, ld: false })); }
+      setUi(p => ({ ...p, ld: true }));
+      try {
+        const r = await fetch('/api/kamus?status=reviewed', { cache: 'no-store' });
+        const d = await r.json();
+        setData(d.data || []);
+      } catch (e) { console.error("Gagal memuat:", e); } 
+      finally { setUi(p => ({ ...p, ld: false })); }
   };
 
   useEffect(() => { fetchD(); }, []);

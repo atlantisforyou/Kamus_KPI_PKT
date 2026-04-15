@@ -11,7 +11,7 @@ const SATUAN = ['%', 'Rp', 'Unit', 'Orang', 'Hari', 'Jam', 'Kali', 'Dokumen', 'L
 const VALIDITAS = [{ v: 'Activity', l: 'Activity (0 - 100)' }, { v: 'Proxy', l: 'Proxy (100 - 105)' }, { v: 'Exact', l: 'Exact (105 - 110)' }];
 const BULAN = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'].map(k => ({ k, l: k.toUpperCase() }));
 
-// ─── KOMPONEN UI GLOBAL (SHARED) ─────────────────────────────────────────
+// KOMPONEN UI GLOBAL
 
 const baseInput = { 
   width: '100%', padding: '10px 14px', border: '1.5px solid #e5eaf0', borderRadius: 8, 
@@ -56,7 +56,7 @@ export const SelectInput = ({ value, onChange, placeholder, options }) => (
   </select>
 );
 
-// ─── KOMPONEN AUTOCOMPLETE SASARAN KHUSUS ───────────────────────────────
+// KOMPONEN AUTOCOMPLETE SASARAN KHUSUS
 export function AutocompleteSasaran({ value, onChange }) {
   const [query, setQuery] = useState(value || '');
   const [pilihan, setPilihan] = useState([]);
@@ -70,7 +70,7 @@ export function AutocompleteSasaran({ value, onChange }) {
   const handleKetik = async (e) => {
     const teks = e.target.value;
     setQuery(teks);
-    onChange(teks); // Kirim teks ke state form utama
+    onChange(teks);
 
     if (teks.length >= 3) {
       setLoading(true);
@@ -92,8 +92,8 @@ export function AutocompleteSasaran({ value, onChange }) {
 
   const handlePilih = (teksSasaran) => {
     setQuery(teksSasaran);
-    onChange(teksSasaran); // Update isi form
-    setBukaDropdown(false); // Tutup dropdown
+    onChange(teksSasaran);
+    setBukaDropdown(false);
   };
 
   return (
@@ -110,7 +110,7 @@ export function AutocompleteSasaran({ value, onChange }) {
         }}
         onBlur={(e) => {
           blur(e);
-          setBukaDropdown(false); // Menutup dropdown saat klik di luar area
+          setBukaDropdown(false);
         }}
       />
       
@@ -126,7 +126,7 @@ export function AutocompleteSasaran({ value, onChange }) {
           {pilihan.map((item) => (
             <li 
               key={item.id} 
-              onMouseDown={() => handlePilih(item.sasaran)} // Pakai onMouseDown agar tidak kalah cepat dengan onBlur input
+              onMouseDown={() => handlePilih(item.sasaran)}
               style={{ padding: '10px 14px', borderBottom: '1px solid #f0f4f8', cursor: 'pointer', fontSize: 13 }}
               onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
               onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
