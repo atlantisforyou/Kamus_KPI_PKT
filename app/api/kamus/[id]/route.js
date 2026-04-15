@@ -3,9 +3,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 
-// ==========================================
-// 1. GET: Ambil Detail 1 KPI
-// ==========================================
+// GET: Ambil Detail 1 KPI
 export async function GET(request, context) {
   try {
     const { id } = await context.params;
@@ -35,9 +33,7 @@ export async function GET(request, context) {
   }
 }
 
-// ==========================================
-// 2. PUT: Update Isi Data KPI (Edit Form)
-// ==========================================
+// PUT: Update Isi Data KPI (Edit Form)
 export async function PUT(request, context) {
   try {
     const { id } = await context.params;
@@ -87,9 +83,7 @@ export async function PUT(request, context) {
   }
 }
 
-// ==========================================
-// 3. DELETE: Hapus KPI
-// ==========================================
+// DELETE: Hapus KPI
 export async function DELETE(request, context) {
   try {
     const { id } = await context.params;
@@ -110,9 +104,7 @@ export async function DELETE(request, context) {
   }
 }
 
-// ==========================================
-// 4. POST: Action (Review / Approve / Revisi)
-// ==========================================
+// POST: Action (Review / Approve / Revisi)
 export async function POST(request, context) {
   try {
     const { id } = await context.params;
@@ -140,7 +132,7 @@ export async function POST(request, context) {
     const currentStatus = rows[0].status;
     let newStatus, updateQuery = '', params = [], message = '';
 
-    // Logika Key Partner
+    // LOGIKA KEY PARTNER
     if (user.role === 'key_partner') {
       const userUnit = (user.unit_kerja || '').trim().toLowerCase();
       const kpiUnit  = (rows[0].unit_pembuat || '').trim().toLowerCase();
@@ -150,33 +142,36 @@ export async function POST(request, context) {
 
       if (action === 'forward') {
         newStatus = 'reviewed';
-        message = 'KPI berhasil direview';
+        message = 'KPI berhasil direview dan diteruskan ke Manajemen';
+        updateQuery = `UPDATE kamus_kpi SET status = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW() WHERE id = ?`;
+        params = [newStatus, user.id, id];
       } else if (action === 'revisi') {
         newStatus = 'revisi';
         message = 'KPI dikembalikan untuk direvisi';
+        updateQuery = `UPDATE kamus_kpi SET status = ?, updated_at = NOW() WHERE id = ?`;
+        params = [newStatus, id];
       } else {
         return NextResponse.json({ error: 'Aksi tidak valid' }, { status: 400 });
       }
-
-      updateQuery = `UPDATE kamus_kpi SET status = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW() WHERE id = ?`;
-      params = [newStatus, user.id, id];
     } 
-    // Logika Manajemen
+    
+    // LOGIKA MANAJEMEN
     else if (user.role === 'manajemen') {
-      if (currentStatus !== 'reviewed') return NextResponse.json({ error: 'KPI belum direview.' }, { status: 400 });
+      if (currentStatus !== 'reviewed') return NextResponse.json({ error: 'KPI belum direview oleh Key Partner.' }, { status: 400 });
 
       if (action === 'approve') {
         newStatus = 'approved';
         message = 'KPI berhasil disetujui';
+        updateQuery = `UPDATE kamus_kpi SET status = ?, approved_by = ?, approved_at = NOW(), updated_at = NOW() WHERE id = ?`;
+        params = [newStatus, user.id, id];
       } else if (action === 'revisi') {
         newStatus = 'revisi';
-        message = 'KPI dikembalikan untuk direvisi';
+        message = 'KPI dikembalikan untuk direvisi'; 
+        updateQuery = `UPDATE kamus_kpi SET status = ?, updated_at = NOW() WHERE id = ?`;
+        params = [newStatus, id];
       } else {
         return NextResponse.json({ error: 'Aksi tidak valid' }, { status: 400 });
       }
-
-      updateQuery = `UPDATE kamus_kpi SET status = ?, approved_by = ?, approved_at = NOW(), updated_at = NOW() WHERE id = ?`;
-      params = [newStatus, user.id, id];
     }
 
     await db.execute(updateQuery, params);
@@ -187,9 +182,7 @@ export async function POST(request, context) {
   }
 }
 
-// ==========================================
-// 5. PATCH: Admin Bypass Status
-// ==========================================
+// PATCH: Admin Bypass Status
 export async function PATCH(request, context) {
   try {
     const { id } = await context.params;

@@ -12,30 +12,23 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     
-    // ════════════ TAMBAHAN: FITUR PENCARIAN SASARAN ════════════
     const type = searchParams.get('type');
     const keyword = searchParams.get('q');
 
-    // Jika request memiliki parameter ?type=sasaran, jalankan query ke master_sasaran
     if (type === 'sasaran') {
-      if (!keyword) return NextResponse.json([]); // Kalau input kosong, kembalikan array kosong
-
+      if (!keyword) return NextResponse.json([]);
       const querySasaran = `SELECT id, bidang, sasaran FROM master_sasaran WHERE sasaran LIKE ? LIMIT 10`;
       const [hasilSasaran] = await db.execute(querySasaran, [`%${keyword}%`]);
       
-      // Langsung return hasilnya dan hentikan proses GET di sini
       return NextResponse.json(hasilSasaran);
     }
-    // ════════════════════════════════════════════════════════════
 
-    // --- KODE ASLI UNTUK MENGAMBIL LIST KAMUS KPI ---
     const statusFilter = searchParams.get('status');
 
     let query = '';
     let params = [];
 
     if (user.role === 'admin') {
-      // Admin: lihat semua tanpa filter
       if (statusFilter) {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
@@ -47,26 +40,32 @@ export async function GET(request) {
                  ORDER BY k.created_at DESC`;
       }
 
-} else if (user.role === 'key_partner') {
-      // ════ Key Partner: hanya lihat KPI dari unit kerja yang sama ════
+    } else if (user.role === 'key_partner') {
       if (statusFilter) {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ? AND k.status = ? ORDER BY k.created_at DESC`;
+                 WHERE p.unit_kerja = ? AND p.role = 'user' AND k.status = ? ORDER BY k.created_at DESC`;
         params = [user.unit_kerja, statusFilter];
       } else {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ? ORDER BY k.created_at DESC`;
+                 WHERE p.unit_kerja = ? AND p.role = 'user' ORDER BY k.created_at DESC`;
         params = [user.unit_kerja];
       }
 
-    } else if (user.role === 'manajemen') {
+ } else if (user.role === 'manajemen') {
       // ════ Manajemen: HIERARKI APPROVAL ════
       let filterStatusSql = statusFilter ? `AND k.status = '${statusFilter}'` : '';
+      const isMine = searchParams.get('mine') === 'true';
 
-      if (user.departemen_id) {
-        // LEVEL VP: Tarik kamus milik 'user' biasa di departemen yang sama
+      if (isMine) {
+        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 WHERE k.dibuat_oleh = ? ${filterStatusSql} ORDER BY k.created_at DESC`;
+        params = [user.id];
+
+      } else if (user.departemen_id) {
+        // LEVEL 1 (VP): Tarik kamus dari 'user' biasa di departemennya
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
                  WHERE p.departemen_id = ? AND p.role = 'user' ${filterStatusSql}
@@ -74,22 +73,33 @@ export async function GET(request) {
         params = [user.departemen_id];
 
       } else if (user.kompartemen_id) {
-        // LEVEL SVP: Tarik kamus milik VP ('manajemen' yg punya departemen) di kompartemen yang sama
+        // 🌟 PERBAIKAN LEVEL 2 (SVP):
+        // Gunakan LEFT JOIN ke tabel 'departemen' untuk melacak ke atas kompartemen mana departemen ini bernaung
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.kompartemen_id = ? AND p.role = 'manajemen' AND p.departemen_id IS NOT NULL ${filterStatusSql}
+                 FROM kamus_kpi k 
+                 LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 LEFT JOIN departemen d ON p.departemen_id = d.id
+                 WHERE (p.kompartemen_id = ? OR d.kompartemen_id = ?) 
+                   AND p.role = 'manajemen' 
+                   AND p.departemen_id IS NOT NULL ${filterStatusSql}
                  ORDER BY k.created_at DESC`;
-        params = [user.kompartemen_id];
+        params = [user.kompartemen_id, user.kompartemen_id];
 
       } else if (user.direktorat_id) {
-        // LEVEL DIREKTUR: Tarik kamus milik SVP ('manajemen' yg tidak punya departemen) di direktorat yg sama
+        // 🌟 PERBAIKAN LEVEL 3 (Direktur):
+        // Gunakan LEFT JOIN ke tabel 'kompartemen' untuk melacak ke direktorat mana ia bernaung
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.direktorat_id = ? AND p.role = 'manajemen' AND p.kompartemen_id IS NOT NULL AND p.departemen_id IS NULL ${filterStatusSql}
+                 FROM kamus_kpi k 
+                 LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                 LEFT JOIN kompartemen komp ON p.kompartemen_id = komp.id
+                 WHERE (p.direktorat_id = ? OR komp.direktorat_id = ?) 
+                   AND p.role = 'manajemen' 
+                   AND p.kompartemen_id IS NOT NULL 
+                   AND p.departemen_id IS NULL ${filterStatusSql}
                  ORDER BY k.created_at DESC`;
-        params = [user.direktorat_id];
+        params = [user.direktorat_id, user.direktorat_id];
+
       } else {
-        // Fallback jika unit kerja tidak terdeteksi
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
                  WHERE p.unit_kerja = ? ${filterStatusSql} ORDER BY k.created_at DESC`;
@@ -97,7 +107,6 @@ export async function GET(request) {
       }
 
     } else {
-      // User: hanya lihat punya sendiri
       if (statusFilter) {
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id

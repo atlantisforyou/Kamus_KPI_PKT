@@ -3,34 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const MENUS = {
-  user: [
-    { href: '/user', label: 'Dashboard', icon: 'home' }, 
-    { href: '/user/kamus', label: 'Kamus KPI', icon: 'book' },
-    { href: '/user/rekap', label: 'My Progress', icon: 'list' }
-  ],
-  'key-partner': [
-    { href: '/key-partner', label: 'Dashboard', icon: 'home' }, 
-    { href: '/key-partner/review', label: 'Review Kamus', icon: 'clipboard' }, 
-    { href: '/key-partner/kamus', label: 'Kamus KPI', icon: 'book' },
-    { href: '/key-partner/rekap', label: 'Rekap KPI', icon: 'list' }
-  ],
-  admin: [
-    { href: '/admin', label: 'Dashboard', icon: 'home' }, 
-    { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: 'users' }, 
-    { href: '/admin/monitoring', label: 'Monitoring', icon: 'bar-chart' },
-    { href: '/admin/rekap', label: 'Progress KPI', icon: 'list' }
-  ],
-  manajemen: [
-    { href: '/manajemen', label: 'Dashboard', icon: 'home' }, 
-    { href: '/manajemen/approval', label: 'Approval Kamus', icon: 'check-circle' },
-    { href: '/manajemen/rekap', label: 'Rekap KPI', icon: 'list' }
-  ],
-};
-
 export const ROLE_LABEL = { 
   user: 'USER', 
-  'key-partner': 'KEY PARTNER', 
+  'key_partner': 'KEY PARTNER', 
   admin: 'ADMINISTRATOR', 
   manajemen: 'MANAJEMEN' 
 };
@@ -53,10 +28,38 @@ export const Icon = ({ name, size = 16 }) => {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 };
 
-export default function Sidebar({ isOpen, onClose, isCollapsed, toggleCollapse, onLogout, loggingOut }) {
+export default function Sidebar({ role, user, isOpen, isCollapsed, toggleCollapse, onClose, onLogout, loggingOut }) {
   const pathname = usePathname() || '';
-  const role = pathname.split('/')[1] || '';
   
+  const isManajemenDept = role === 'manajemen' && user?.departemen_id;
+  
+  const MENUS = {
+    user: [
+      { href: '/user', label: 'Dashboard', icon: 'home' }, 
+      { href: '/user/kamus', label: 'Kamus KPI', icon: 'book' },
+      { href: '/user/rekap', label: 'My Progress', icon: 'list' }
+    ],
+    'key_partner': [
+      { href: '/key-partner', label: 'Dashboard', icon: 'home' }, 
+      { href: '/key-partner/review', label: 'Review Kamus', icon: 'clipboard' }, 
+      { href: '/key-partner/kamus', label: 'Kamus KPI', icon: 'book' },
+      { href: '/key-partner/rekap', label: 'Rekap KPI', icon: 'list' }
+    ],
+    admin: [
+      { href: '/admin', label: 'Dashboard', icon: 'home' }, 
+      { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: 'users' }, 
+      { href: '/admin/monitoring', label: 'Monitoring', icon: 'bar-chart' },
+      { href: '/admin/rekap', label: 'Progress KPI', icon: 'list' }
+    ],
+    manajemen: [
+      { href: '/manajemen', label: 'Dashboard', icon: 'home' },
+      { href: '/manajemen/approval', label: 'Approval KPI', icon: 'check-circle' },
+      ...(isManajemenDept ? [{ href: '/manajemen/kamus', label: 'Kamus KPI', icon: 'book' }] : []),
+
+      { href: '/manajemen/rekap', label: 'Rekap Data', icon: 'list' } 
+    ],
+  };
+
   return (
     <>
       <style>{`
@@ -95,7 +98,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, toggleCollapse, 
         .nav-item { display: flex; align-items: center; padding: 12px 16px; border-radius: 10px; color: #8ba3b8; text-decoration: none; transition: all 0.2s; font-size: 14px; font-weight: 500; }
         .nav-item:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
         
-        /* Menu Aktif dengan Warna Oranye */
         .nav-item.active { background: #FF6C0C; color: #ffffff; font-weight: 600; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
 
         /* 5. FOOTER & TOMBOL LOGOUT */

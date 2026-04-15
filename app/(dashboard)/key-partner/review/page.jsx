@@ -96,7 +96,7 @@ export default function KeyPartnerReviewPage() {
     if (act === 'revisi' && !confirm('Yakin ingin mengembalikan KPI ini untuk direvisi?')) return;
     if (act === 'forward' && !confirm('Yakin ingin meneruskan KPI ini ke Manajemen?')) return;
     try {
-      const r = await fetch(`/api/kamus/${id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: act }) });
+      const r = await fetch(`/api/kamus/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: act }) });
       if (!r.ok) throw new Error((await r.json()).error || 'Gagal memproses');
       toast(act === 'forward' ? 'KPI diteruskan ke Manajemen!' : 'KPI dikembalikan ke karyawan untuk revisi!');
       setUi(p => ({ ...p, sel: null })); fetchD();

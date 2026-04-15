@@ -75,7 +75,8 @@ export default function ApprovalManajemenPage() {
       try {
         const r = await fetch('/api/kamus?status=reviewed', { cache: 'no-store' });
         const d = await r.json();
-        setData(d.data || []);
+        
+        setData(d.data || []); 
       } catch (e) { console.error("Gagal memuat:", e); } 
       finally { setUi(p => ({ ...p, ld: false })); }
   };
