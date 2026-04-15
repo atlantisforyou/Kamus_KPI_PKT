@@ -202,17 +202,24 @@ export async function PATCH(request, context) {
     }
 
     const [rows] = await db.execute('SELECT id FROM kamus_kpi WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return NextResponse.json({ error: 'KPI tidak ditemukan' }, { status: 404 });
-    }
+      if (rows.length === 0) {
+        return NextResponse.json({ error: 'KPI tidak ditemukan' }, { status: 404 });
+      }
 
-    await db.execute(
-      'UPDATE kamus_kpi SET status = ?, updated_at = NOW() WHERE id = ?',
-      [status, id]
-    );
+      if (status === 'approved') {
+        await db.execute(
+          'UPDATE kamus_kpi SET status = ?, approved_by = ?, approved_at = NOW(), updated_at = NOW() WHERE id = ?',
+          [status, user.id, id]
+        );
+      } else {
+        await db.execute(
+          'UPDATE kamus_kpi SET status = ?, updated_at = NOW() WHERE id = ?',
+          [status, id]
+        );
+      }
 
-    return NextResponse.json({ success: true, message: `Status berhasil diubah menjadi ${status}` });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true, message: `Status berhasil diubah menjadi ${status}` });
+    } catch (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

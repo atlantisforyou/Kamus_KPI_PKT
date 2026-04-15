@@ -26,8 +26,31 @@ function StatusBadge({ status, customLabel }) {
   );
 }
 
-// ── KOMPONEN MODAL DETAIL ─────────────────────────────────────────
-function KpiDetailModal({ kpi, onClose }) {
+function KpiDetailModal({ kpi, onClose, onRefresh }) {
+  const [loadingApprove, setLoadingApprove] = useState(false);
+
+  const handleBypassApprove = async () => {
+    if (!confirm('Bypass Admin: Yakin ingin menyetujui KPI ini?')) return;
+    setLoadingApprove(true);
+    try {
+      const r = await fetch(`/api/kamus/${kpi.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      
+      alert('KPI berhasil disetujui oleh Admin!');
+      onRefresh();
+      onClose();
+    } catch (e) {
+      alert(e.message || 'Terjadi kesalahan');
+    } finally {
+      setLoadingApprove(false);
+    }
+  };
+
   if (!kpi) return null;
 
   const DRow = ({ l, v }) => (
@@ -87,6 +110,16 @@ function KpiDetailModal({ kpi, onClose }) {
         </div>
         
         <div className="modal-actions">
+          {kpi.status !== 'approved' && (
+            <button 
+              className="btn-modal" 
+              style={{ background: '#16a34a', color: '#fff', border: 'none' }} 
+              onClick={handleBypassApprove}
+              disabled={loadingApprove}
+            >
+              {loadingApprove ? 'Memproses...' : 'Approve KPI'}
+            </button>
+          )}
           <button className="btn-modal btn-cancel" onClick={onClose}>Tutup</button>
         </div>
       </div>
@@ -94,7 +127,7 @@ function KpiDetailModal({ kpi, onClose }) {
   );
 }
 
-// ── KOMPONEN KARTU KARYAWAN ───────────────────────────────────────
+// KOMPONEN KARTU KARYAWAN
 function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -156,11 +189,11 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
             <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '13px' }}>Tidak ada KPI.</div>
           ) : (
           <div className="table-responsive">
-              {/* Ambil index bulan saat ini secara otomatis */}
+
               {(() => {
-                const indexBulanIni = new Date().getMonth(); // 3 untuk April
-                const bulanDb = BULAN[indexBulanIni]; // 'apr'
-                const labelBulan = B_LBL[indexBulanIni]; // 'Apr'
+                const indexBulanIni = new Date().getMonth();
+                const bulanDb = BULAN[indexBulanIni];
+                const labelBulan = B_LBL[indexBulanIni];
 
                 return (
                   <table className="kpi-table">
@@ -170,7 +203,7 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                         <th width="30%">Detail KPI</th>
                         <th width="15%">Polaritas</th>
                         <th width="15%">Target Total</th>
-                        {/* Header otomatis berubah sesuai bulan saat ini */}
+
                         <th width="10%">Target s.d {labelBulan}</th>
                         <th width="15%">Realisasi s.d {labelBulan}</th>
                         <th width="10%">Aksi</th>
@@ -178,7 +211,7 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                     </thead>
                     <tbody>
                       {filteredKpi.map((kpi, idx) => {
-                        // Tarik data dinamis sesuai bulan ini
+
                         const targetBulanIni = kpi[`target_${bulanDb}`];
                         const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
 
@@ -188,17 +221,14 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                             <td style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</td>
                             <td>{kpi.polaritas || '-'}</td>
                             
-                            {/* Target Tahunan */}
                             <td style={{ fontWeight: 600 }}>
                               {kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || ''}` : '-'}
                             </td>
                             
-                            {/* Target Bulan Ini */}
                             <td>
                               {targetBulanIni ? `${targetBulanIni} ${kpi.satuan || ''}` : '-'}
                             </td>
                             
-                            {/* Realisasi Bulan Ini */}
                             <td>
                               {realisasiBulanIni ? `${realisasiBulanIni} ${kpi.satuan || ''}` : '-'}
                             </td>
@@ -239,14 +269,13 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
   );
 }
 
-// ── HALAMAN UTAMA REKAP ───────────────────────────────────────────
+// HALAMAN UTAMA REKAP
 export default function RekapPage() {
   const [data, setData]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [filterUnit, setFilterUnit] = useState('');
   
-  // State untuk menyimpan data KPI yang ingin ditampilkan di Modal
   const [selectedKpi, setSelectedKpi] = useState(null);
   
   useEffect(() => {
@@ -455,6 +484,11 @@ export default function RekapPage() {
       <KpiDetailModal 
         kpi={selectedKpi} 
         onClose={() => setSelectedKpi(null)} 
+        onRefresh={() => {
+          fetch('/api/rekap')
+            .then(r => r.json())
+            .then(d => setData(d.data || []));
+        }}
       />
     </>
   );

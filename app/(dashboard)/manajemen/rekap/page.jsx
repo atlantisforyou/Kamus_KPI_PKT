@@ -387,7 +387,7 @@ export default function RekapPage() {
 
       <div className="page-container">
         <div className="header-top">
-          <h1 className="header-title">Rekap Pencapaian KPI Unit Kerja 2024</h1>
+          <h1 className="header-title">Rekapitulasi Pencapaian KPI Karyawan 2024</h1>
         </div>
 
         <div className="main-card">

@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 
+const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
+const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+
 const STATUS_CONFIG = {
   draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
   submitted: { label: 'Submitted', color: '#d97706', bg: '#fef3c7' },
@@ -9,19 +12,21 @@ const STATUS_CONFIG = {
   approved:  { label: 'Approved',  color: '#16a34a', bg: '#dcfce7' },
 };
 
-function StatusBadge({ status }) {
+const Ico = {
+  Close:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Detail: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+};
+
+function StatusBadge({ status, customLabel }) {
   const s = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
   return (
-    <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color, whiteSpace: 'nowrap' }}>
-      {s.label}
+    <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: s.bg, color: s.color, whiteSpace: 'nowrap', border: `1px solid ${s.color}30` }}>
+      {customLabel || s.label}
     </span>
   );
 }
 
-// ─── KOMPONEN MODAL BARU (DITAMBAHKAN KHUSUS UNTUK DETAIL) ───
-const BULAN_MODAL = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
-const B_LBL_MODAL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
-
+// ── KOMPONEN MODAL DETAIL ─────────────────────────────────────────
 function KpiDetailModal({ kpi, onClose }) {
   if (!kpi) return null;
 
@@ -33,16 +38,14 @@ function KpiDetailModal({ kpi, onClose }) {
   );
 
   return (
-    <div className="modal-overlay-admin" onClick={onClose}>
-      <div className="modal-admin" onClick={e => e.stopPropagation()}>
-        <div className="modal-header-admin">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
           <h3>Detail KPI & Pencapaian</h3>
-          <button className="modal-close-admin" onClick={onClose}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+          <button className="modal-close" onClick={onClose}>{Ico.Close}</button>
         </div>
         
-        <div className="modal-body-admin">
+        <div className="modal-body">
           <div className="detail-section">
             <h4>Informasi Dasar & Strategis</h4>
             <DRow l="Nama KPI" v={kpi.nama_kpi} />
@@ -65,9 +68,9 @@ function KpiDetailModal({ kpi, onClose }) {
           <div className="detail-section">
             <h4>Target & Realisasi Bulanan</h4>
             <div className="target-grid-sm">
-              {BULAN_MODAL.map((b, i) => (
+              {BULAN.map((b, i) => (
                 <div key={b} className="target-cell-sm">
-                  <div className="t-lbl">{B_LBL_MODAL[i]}</div>
+                  <div className="t-lbl">{B_LBL[i]}</div>
                   <div className="t-split">
                     <div className="t-target"><span style={{color:'#7a8b9a', fontSize: 10}}>TGT:</span> {kpi[`target_${b}`] ?? '-'}</div>
                     <div className="t-real"><span style={{color:'#7a8b9a', fontSize: 10}}>REL:</span> {kpi[`realisasi_${b}`] ?? '-'}</div>
@@ -83,7 +86,7 @@ function KpiDetailModal({ kpi, onClose }) {
           </div>
         </div>
         
-        <div className="modal-actions-admin">
+        <div className="modal-actions">
           <button className="btn-modal btn-cancel" onClick={onClose}>Tutup</button>
         </div>
       </div>
@@ -91,160 +94,143 @@ function KpiDetailModal({ kpi, onClose }) {
   );
 }
 
-// ─── KOMPONEN KARTU KARYAWAN (TIDAK ADA YANG DIUBAH) ─────────
-function KaryawanCard({ karyawan, defaultOpen = false, search, onViewDetail }) {
+// ── KOMPONEN KARTU KARYAWAN ───────────────────────────────────────
+function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
   const [open, setOpen] = useState(defaultOpen);
 
-  // 1. Ambil bulan saat ini untuk teks di Header Tabel (Contoh: "Apr")
-  const namaBulanSekarang = new Date().toLocaleString('id-ID', { month: 'short' });
-
-  // 2. Daftar akhiran nama kolom di database sesuai urutan bulan
-  const namaKolomBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'];
-  
-  // 3. Ambil index bulan saat ini (0 untuk Januari, 3 untuk April, dst)
-  const indexBulanIni = new Date().getMonth();
-  
-  // 4. Dapatkan akhiran kolom untuk bulan ini (Contoh sekarang April, jadi nilainya "apr")
-  const bulanDb = namaKolomBulan[indexBulanIni];
-
-  const filteredKpi = karyawan.kpi.filter(k =>
+  const filteredKpi = karyawan.kpi?.filter(k =>
     !search ||
     k.nama_kpi?.toLowerCase().includes(search.toLowerCase()) ||
     k.perspektif_bsc?.toLowerCase().includes(search.toLowerCase()) ||
     k.sasaran_strategis?.toLowerCase().includes(search.toLowerCase())
-  );
+  ) || [];
+
+  const totalKpi = karyawan.kpi?.length || 0;
+  const approvedKpi = karyawan.kpi?.filter(k => k.status === 'approved').length || 0;
+  const progressPct = totalKpi === 0 ? 0 : Math.round((approvedKpi / totalKpi) * 100);
+  
+  let evalStatus = progressPct >= 100 ? 'Melampaui Target' : progressPct > 0 ? 'On Progress' : 'Belum Ada';
+  let evalBg = progressPct >= 100 ? '#dcfce7' : progressPct > 0 ? '#fef3c7' : '#f1f5f9';
+  let evalColor = progressPct >= 100 ? '#16a34a' : progressPct > 0 ? '#d97706' : '#64748b';
+
+  const displayDept = karyawan.nama_dept || karyawan.unit_kerja || '-';
 
   return (
-    <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #bfdbfe', marginBottom: 16, overflow: 'hidden' }}>
-      {/* Header Accordion */}
-      <div 
-        onClick={() => setOpen(o => !o)}
-        style={{ 
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-          padding: '16px 20px', cursor: 'pointer', 
-          background: open ? '#f8fafc' : '#fff', 
-          borderBottom: open ? '1px solid #e2e8f0' : 'none', 
-          transition: 'background .15s' 
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '30%' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#3b7dd8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
-            {karyawan.nama?.charAt(0).toUpperCase()}
+    <div className={`employee-card ${open ? 'expanded' : ''}`}>
+
+      <div className="employee-header" onClick={() => setOpen(o => !o)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+          <div className={`chevron-icon ${open ? 'open' : ''}`}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, color: '#1e293b', fontSize: 13, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {karyawan.nama}
-            </div>
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-              {karyawan.npk}
-            </div>
+          <div className="avatar">{karyawan.nama?.charAt(0).toUpperCase()}</div>
+          <div style={{ minWidth: '200px' }}>
+            <div className="emp-name">{karyawan.nama}</div>
+            <div className="emp-role">{karyawan.npk || 'Staff'}</div>
           </div>
         </div>
 
-        <div className="hide-mobile" style={{ width: '40%', textAlign: 'center', fontSize: 13, color: '#475569', fontWeight: 500 }}>
-          {karyawan.unit_kerja || '-'}
-        </div>
+        <div className="emp-dept">{displayDept}</div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '30%', justifyContent: 'flex-end' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#1e293b' }}>Progress KPI:</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#10b981' }}>100%</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, justifyContent: 'flex-end' }}>
+          <div className="emp-score-text">
+            Progress KPI: <span style={{ color: progressPct === 100 ? '#16a34a' : '#1e293b' }}>{progressPct}%</span>
+
+            {progressPct < 100 && (
+              <div style={{ width: '100%', height: '4px', background: '#e2e8f0', borderRadius: '4px', marginTop: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${progressPct}%`, height: '100%', background: '#f59e0b', borderRadius: '4px' }} />
+              </div>
+            )}
           </div>
-          <div style={{ background: '#dcfce7', color: '#16a34a', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
-            Melampaui Target
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform .2s', flexShrink: 0 }}>
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+          <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: evalBg, color: evalColor, whiteSpace: 'nowrap' }}>
+            {evalStatus}
+          </span>
         </div>
       </div>
 
-      {/* Area Detail yang Terbuka (Tabel) */}
       {open && (
-        <div style={{ padding: '20px', background: '#fff' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 16, letterSpacing: 0.5 }}>
-            DETAIL KPI INDIVIDU
-          </div>
+        <div className="employee-detail">
+          <div className="detail-title">DETAIL KPI INDIVIDU</div>
           
           {filteredKpi.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: '#b0bcc8', fontSize: 13, border: '1px solid #e2e8f0', borderRadius: 8 }}>
-              {karyawan.kpi.length === 0 ? 'Belum ada KPI yang diisi.' : 'Tidak ada KPI yang cocok dengan pencarian.'}
-            </div>
+            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '13px' }}>Tidak ada KPI.</div>
           ) : (
-            <div className="table-container">
-              <table className="kpi-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 50, textAlign: 'center' }}>No</th>
-                    <th>Detail KPI</th>
-                    <th>Polaritas</th>
-                    <th>Target Total</th>
-                    {/* Header akan otomatis berubah jadi "Target s.d Apr" dll */}
-                    <th>Target s.d {namaBulanSekarang}</th>
-                    <th>Realisasi s.d {namaBulanSekarang}</th>
-                    <th style={{ textAlign: 'center' }}>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredKpi.map((kpi, idx) => {
-                    // Panggil data secara dinamis berdasarkan bulan ini
-                    const targetBulanIni = kpi[`target_${bulanDb}`];
-                    const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
+          <div className="table-responsive">
+              {/* Ambil index bulan saat ini secara otomatis */}
+              {(() => {
+                const indexBulanIni = new Date().getMonth(); // 3 untuk April
+                const bulanDb = BULAN[indexBulanIni]; // 'apr'
+                const labelBulan = B_LBL[indexBulanIni]; // 'Apr'
 
-                    // Cek apakah KPI sudah di-approve
-                    const isApproved = kpi.status === 'approved';
-
-                    return (
-                      <tr key={kpi.id}>
-                        <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 500 }}>{idx + 1}</td>
-                        <td style={{ fontWeight: 600 }}>{kpi.nama_kpi}</td>
-                        <td>{kpi.polaritas || 'Maximize'}</td>
-                        
-                        {/* Target Tahunan: Kalau ada angka, tampilkan angka + satuan. Kalau kosong, tampilkan '-' saja */}
-                        <td>{kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || '%'}` : '-'}</td>
-                        
-                        {/* Target s.d Bulan Ini: Kalau ada angka, tampilkan angka + satuan. Kalau kosong, tampilkan '-' saja */}
-                        <td>{targetBulanIni ? `${targetBulanIni} ${kpi.satuan || '%'}` : '-'}</td>
-                        
-                        {/* Realisasi s.d Bulan Ini */}
-                        <td>
-                          {!isApproved ? (
-                            <span style={{ fontSize: 11, color: '#d97706', background: '#fef3c7', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
-                              Belum Approved
-                            </span>
-                          ) : (
-                            realisasiBulanIni ? (
-                              <span style={{ fontWeight: 700, color: '#10b981' }}>{`${realisasiBulanIni} ${kpi.satuan || '%'}`}</span>
-                            ) : '-'
-                          )}
-                        </td>
-                        
-                        <td style={{ textAlign: 'center' }}>
-                          <button className="btn-detail-outline" onClick={() => onViewDetail(kpi)}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                            </svg>
-                            Detail
-                          </button>
-                        </td>
+                return (
+                  <table className="kpi-table">
+                    <thead>
+                      <tr>
+                        <th width="5%">No</th>
+                        <th width="30%">Detail KPI</th>
+                        <th width="15%">Polaritas</th>
+                        <th width="15%">Target Total</th>
+                        {/* Header otomatis berubah sesuai bulan saat ini */}
+                        <th width="10%">Target s.d {labelBulan}</th>
+                        <th width="15%">Realisasi s.d {labelBulan}</th>
+                        <th width="10%">Aksi</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {filteredKpi.map((kpi, idx) => {
+                        // Tarik data dinamis sesuai bulan ini
+                        const targetBulanIni = kpi[`target_${bulanDb}`];
+                        const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
+
+                        return (
+                          <tr key={kpi.id || idx}>
+                            <td style={{ fontWeight: 600, color: '#64748b' }}>{idx + 1}</td>
+                            <td style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</td>
+                            <td>{kpi.polaritas || '-'}</td>
+                            
+                            {/* Target Tahunan */}
+                            <td style={{ fontWeight: 600 }}>
+                              {kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || ''}` : '-'}
+                            </td>
+                            
+                            {/* Target Bulan Ini */}
+                            <td>
+                              {targetBulanIni ? `${targetBulanIni} ${kpi.satuan || ''}` : '-'}
+                            </td>
+                            
+                            {/* Realisasi Bulan Ini */}
+                            <td>
+                              {realisasiBulanIni ? `${realisasiBulanIni} ${kpi.satuan || ''}` : '-'}
+                            </td>
+                            
+                            <td>
+                              <button 
+                                className="btn-detail"
+                                onClick={() => onOpenModal(kpi)}
+                              >
+                                {Ico.Detail} Detail
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           )}
 
-          {/* Footer Progress & Evaluasi */}
-          <div className="progress-footer">
-            <div style={{ display: 'flex', alignItems: 'center', fontSize: 13, fontWeight: 700, color: '#1e293b', flex: 1, minWidth: 250 }}>
-              Total Progress KPI: <span style={{ color: '#10b981', marginLeft: 4, marginRight: 12 }}>100%</span>
-              <div className="progress-bar-bg">
-                <div className="progress-bar-fill" style={{ width: '100%' }}></div>
+          <div className="eval-footer">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>Total Progress KPI: <span style={{ color: '#16a34a' }}>{progressPct}%</span></span>
+              <div style={{ width: '150px', height: '6px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${progressPct}%`, height: '100%', background: '#16a34a', borderRadius: '4px' }} />
               </div>
             </div>
-            <div style={{ fontSize: 13, color: '#475569' }}>
-              <span style={{ fontWeight: 700, color: '#1e293b' }}>Evaluasi Akhir:</span> <span style={{ color: '#10b981', fontWeight: 600 }}>Melampaui Target.</span> Berdasarkan persetujuan atasan.
+            <div style={{ fontSize: '13px', color: '#475569' }}>
+              <span style={{ fontWeight: 700, color: '#0f172a' }}>Evaluasi Akhir:</span> <span style={{ color: evalColor }}>{evalStatus}.</span> 
+              <span style={{ marginLeft: '6px' }}>Berdasarkan persetujuan atasan.</span>
             </div>
           </div>
         </div>
@@ -253,15 +239,16 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onViewDetail }) {
   );
 }
 
-// ─── HALAMAN UTAMA (TIDAK ADA LOGIKA YANG DIUBAH) ─────────────
+// ── HALAMAN UTAMA REKAP ───────────────────────────────────────────
 export default function RekapPage() {
   const [data, setData]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [filterUnit, setFilterUnit] = useState('');
-  const [expandAll, setExpandAll]   = useState(false);
+  
+  // State untuk menyimpan data KPI yang ingin ditampilkan di Modal
   const [selectedKpi, setSelectedKpi] = useState(null);
-
+  
   useEffect(() => {
     fetch('/api/rekap')
       .then(r => r.json())
@@ -269,132 +256,202 @@ export default function RekapPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const units = [...new Set(data.map(k => k.unit_kerja).filter(Boolean))].sort();
+  const units = [...new Set(data.map(k => k.nama_dept || k.unit_kerja).filter(Boolean))].sort();
 
   const filtered = data.filter(k => {
-    const matchUnit = filterUnit ? k.unit_kerja === filterUnit : true;
+    const empDept = k.nama_dept || k.unit_kerja;
+    const matchUnit = filterUnit ? empDept === filterUnit : true;
+    
     const matchSearch = !search ||
       k.nama?.toLowerCase().includes(search.toLowerCase()) ||
       k.npk?.toLowerCase().includes(search.toLowerCase()) ||
-      k.kpi.some(kpi =>
+      k.kpi?.some(kpi =>
         kpi.nama_kpi?.toLowerCase().includes(search.toLowerCase()) ||
-        kpi.perspektif_bsc?.toLowerCase().includes(search.toLowerCase()) ||
         kpi.sasaran_strategis?.toLowerCase().includes(search.toLowerCase())
       );
     return matchUnit && matchSearch;
   });
 
-  const totalKpi      = data.reduce((s, k) => s + k.kpi.length, 0);
-  const totalApproved = data.reduce((s, k) => s + k.kpi.filter(p => p.status === 'approved').length, 0);
-
   return (
     <>
       <style>{`
-        * { box-sizing: border-box; }
-        .search-box { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 0 14px; }
-        .search-box input { flex: 1; border: none; outline: none; font-size: 14px; padding: 10px 0; background: transparent; color: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .search-box input::placeholder { color: #94a3b8; }
-        .filter-select { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; color: #374151; background: #fff; cursor: pointer; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; }
+        /* Global & Layouts */
+        .page-container { padding: 24px; background: #f4f8fc; min-height: 100vh; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header-title { font-size: 22px; font-weight: 800; color: #0f172a; }
+
+        /* Main White Card Layout */
+        .main-card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; padding: 20px; }
+
+        /* Toolbar / Filters */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .filter-group { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .filter-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; font-weight: 500; }
+        .filter-select { padding: 8px 32px 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #0f172a; background: #fff; cursor: pointer; outline: none; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; }
         
-        .table-container { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 16px; background: #fff; }
+        .search-wrapper { display: flex; align-items: center; gap: 16px; }
+        .search-box { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0 12px; width: 240px; }
+        .search-box input { flex: 1; border: none; outline: none; font-size: 13px; padding: 9px 0; background: transparent; color: #0f172a; }
+
+        /* Employee List Styling */
+        .employee-list { display: flex; flex-direction: column; gap: 12px; }
+        .employee-card { border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; overflow: hidden; transition: all 0.2s; }
+        .employee-card.expanded { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); }
+        
+        /* Employee Header */
+        .employee-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; background: #fff; transition: background 0.2s; }
+        .employee-card.expanded .employee-header { background: #eff6ff; border-bottom: 1px solid #bfdbfe; }
+        .employee-header:hover { background: #f8fafc; }
+        
+        .chevron-icon { color: #64748b; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
+        .chevron-icon.open { transform: rotate(180deg); color: #3b82f6; }
+        
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #94a3b8; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .employee-card.expanded .avatar { background: #3b82f6; } 
+        
+        .emp-name { font-size: 14px; font-weight: 700; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; }
+        .emp-role { font-size: 12px; color: #64748b; }
+        .emp-dept { font-size: 13px; color: #334155; font-weight: 500; flex: 1; text-align: center; }
+        .emp-score-text { font-size: 13px; font-weight: 700; color: #334155; display: flex; flex-direction: column; align-items: flex-end; }
+
+        /* Employee Details (Table) */
+        .employee-detail { padding: 20px; background: #fff; }
+        .detail-title { font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 12px; letter-spacing: 0.5px; }
+        
+        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         .kpi-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .kpi-table th { padding: 12px 16px; font-size: 12px; font-weight: 700; color: #475569; background: #f8fafc; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-        .kpi-table td { padding: 14px 16px; font-size: 13px; color: #1e293b; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        .kpi-table tbody tr:last-child td { border-bottom: none; }
-        .kpi-table tbody tr:hover { background: #f8fafc; }
+        .kpi-table th { background: #f8fafc; padding: 12px 16px; font-size: 12px; font-weight: 700; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .kpi-table td { padding: 14px 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .kpi-table tr:last-child td { border-bottom: none; }
         
-        .btn-detail-outline { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #fff; border: 1.5px solid #bfdbfe; color: #3b7dd8; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .btn-detail-outline:hover { background: #eff6ff; border-color: #93c5fd; }
-        
-        .progress-footer { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-        .progress-bar-bg { flex: 1; max-width: 250px; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: #10b981; border-radius: 4px; }
-        
-        @media (max-width: 768px) {
-          .hide-mobile { display: none !important; }
-          .progress-footer { flex-direction: column; align-items: flex-start; }
-          .progress-bar-bg { max-width: 100%; }
+        /* Tombol Detail Baru */
+        .btn-detail {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          background: #eff6ff;
+          color: #3b82f6;
+          border: 1px solid #bfdbfe;
+          border-radius: 6px;
+          font-size: 12px;
+          font-family: inherit;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-detail:hover {
+          background: #dbeafe;
+          color: #2563eb;
         }
 
-        /* ─── CSS MODAL BARU (HANYA INI YANG DITAMBAHKAN) ─── */
-        .modal-overlay-admin { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; backdrop-filter: blur(4px); }
-        .modal-admin { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); animation: modalIn .3s ease-out; display: flex; flex-direction: column; }
+        .eval-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap; gap: 12px; }
+
+        /* ── MODAL STYLES ── */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .modal-header-admin { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 10; }
-        .modal-header-admin h3 { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0; }
-        .modal-close-admin { width: 32px; height: 32px; border-radius: 8px; background: #f0f4f8; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; color: #7a8b9a; }
-        .modal-close-admin:hover { background: #e2e8f0; color: #1a2b4a; }
-        
-        .modal-body-admin { padding: 24px; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+        .modal-header h3 { font-size: 16px; font-weight: 700; color: #1a2b4a; margin: 0; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; background: #f4f6f9; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+        .modal-close:hover { background: #e8edf2; }
+        .modal-body { padding: 24px; }
         .detail-section { margin-bottom: 24px; }
         .detail-section h4 { font-size: 11px; font-weight: 700; color: #7a8b9a; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f0f4f8; }
         .detail-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 10px; font-size: 14px; }
-        .detail-key { color: #7a8b9a; font-weight: 600; }
-        .detail-val { color: #1e293b; font-weight: 500; }
+        .detail-key { color: #7a8b9a; font-weight: 500; }
+        .detail-val { color: #1a2b4a; font-weight: 500; }
         
         .target-grid-sm { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
         .target-cell-sm { background: #fff; border-radius: 8px; padding: 10px; text-align: center; border: 1px solid #e8edf2; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .target-cell-sm .t-lbl { font-size: 11px; color: #1e293b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f0f4f8; padding-bottom: 4px; }
+        .target-cell-sm .t-lbl { font-size: 11px; color: #1a2b4a; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #f0f4f8; padding-bottom: 4px; }
         .target-cell-sm .t-split { display: flex; flex-direction: column; gap: 4px; text-align: left; }
         .target-cell-sm .t-target, .target-cell-sm .t-real { font-size: 12px; font-weight: 600; color: #374151; display: flex; justify-content: space-between; }
         .target-cell-sm .t-real { color: #2563eb; }
         
-        .modal-actions-admin { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; }
-        .btn-modal { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; transition: all .15s; }
+        .modal-actions { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; }
+        .btn-modal { padding: 10px 20px; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; transition: all .15s; }
         .btn-cancel { background: #f4f6f9; color: #374151; }
-        .btn-cancel:hover { background: #e8edf2; color: #1e293b; }
+        .btn-cancel:hover { background: #e8edf2; }
 
         @media (max-width: 768px) {
+          .toolbar { flex-direction: column; align-items: stretch; }
+          .filter-group, .search-wrapper { justify-content: space-between; width: 100%; }
+          .search-box { width: 100%; }
+          .emp-dept { display: none; }
+          .eval-footer { flex-direction: column; align-items: flex-start; }
           .target-grid-sm { grid-template-columns: repeat(3, 1fr); }
         }
       `}</style>
 
-      {/* Header Halaman */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Rekap KPI Unit Kerja</h1>
-          <p style={{ fontSize: 14, color: '#64748b' }}>Ringkasan KPI karyawan di unit kerja kamu.</p>
+      <div className="page-container">
+        <div className="header-top">
+          <h1 className="header-title">My Progress KPI</h1>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: '8px 16px', border: '1px solid #e2e8f0', fontSize: 13, color: '#64748b' }}>
-            Total <strong style={{ color: '#1e293b' }}>{totalKpi}</strong> KPI · <strong style={{ color: '#16a34a' }}>{totalApproved}</strong> Approved
+
+        <div className="main-card">
+          
+          <div className="toolbar">
+            <div className="filter-group">
+              <div className="filter-item">
+                Departemen: 
+                <select className="filter-select" value={filterUnit} onChange={e => setFilterUnit(e.target.value)}>
+                  <option value="">Semua</option>
+                  {units.map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+              <div className="filter-item">
+                Periode: 
+                <select className="filter-select">
+                  <option>Q4</option>
+                  <option>Q3</option>
+                  <option>Q2</option>
+                  <option>Q1</option>
+                </select>
+              </div>
+              <div className="filter-item">
+                Status: 
+                <select className="filter-select">
+                  <option>Semua</option>
+                  <option>Tercapai</option>
+                  <option>On Progress</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="search-wrapper">
+              <div className="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+            </div>
           </div>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>
+              <svg style={{ animation: 'spin 2s linear infinite', marginBottom: '8px' }} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+              <div>Memuat data...</div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>Tidak ada data yang sesuai.</div>
+          ) : (
+            <div className="employee-list">
+              {filtered.map(k => (
+                <KaryawanCard 
+                  key={k.id} 
+                  karyawan={k} 
+                  search={search} 
+                  onOpenModal={setSelectedKpi}
+                />
+              ))}
+            </div>
+          )}
+
         </div>
       </div>
 
-      {/* Toolbar Pencarian & Filter */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div className="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input placeholder="Cari nama, NPK, atau nama KPI..." value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        {units.length > 0 && (
-          <select className="filter-select" value={filterUnit} onChange={e => setFilterUnit(e.target.value)}>
-            <option value="">Semua Unit Kerja</option>
-            {units.map(u => <option key={u} value={u}>{u}</option>)}
-          </select>
-        )}
-      </div>
-
-      {/* Konten Data */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#64748b' }}>⏳ Memuat data rekap...</div>
-      ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#64748b' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <p>{search || filterUnit ? 'Tidak ada hasil pencarian.' : 'Belum ada data karyawan.'}</p>
-        </div>
-      ) : (
-        filtered.map(k => (
-          <KaryawanCard key={k.id} karyawan={k} defaultOpen={expandAll} search={search} onViewDetail={setSelectedKpi} />
-        ))
-      )}
-
-      {/* ════════════ MODAL POPUP DETAIL KPI YANG DIPANGGIL ════════════ */}
+      {/* Modal Detail */}
       <KpiDetailModal 
         kpi={selectedKpi} 
         onClose={() => setSelectedKpi(null)} 
