@@ -78,6 +78,25 @@ export default function KamusPage() {
     });
   };
 
+
+  const handleAutoFill = (kpiData) => {
+    setForm(p => ({
+      ...p,
+      nama_kpi: kpiData.nama_kpi || '',
+      definisi_kpi: kpiData.definisi_kpi || '',
+      tujuan_kpi: kpiData.tujuan_kpi || '',
+      tipe_kpi: kpiData.tipe_kpi || '',
+      formula_penilaian: kpiData.formula_penilaian || '',
+      jenis_pengukuran: kpiData.jenis_pengukuran || '',
+      polaritas: kpiData.polaritas || '',
+      frekuensi: kpiData.frekuensi || '',
+      sumber_data: kpiData.sumber_data || '',
+      satuan: kpiData.satuan || '',
+      validitas: kpiData.validitas || '',
+      nilai_maksimum: kpiData.nilai_maksimum || ''
+    }));
+  };
+
   const handleSubmit = async (status) => {
     if (!form.nama_kpi.trim()) return setUi(p => ({ ...p, err: 'Nama KPI wajib diisi' }));
     if (!form.perspektif_bsc) return setUi(p => ({ ...p, err: 'Perspektif BSC wajib dipilih' }));
@@ -165,7 +184,7 @@ export default function KamusPage() {
 
           {ui.ldR ? <div className="loading-overlay">{Ico.Spin} Memuat data KPI...</div> : (
             <>
-              <InformasiDasarForm form={form} set={setF} />
+              <InformasiDasarForm form={form} set={setF} handleAutoFill={handleAutoFill} />
               <KarakteristikKPIForm form={form} set={setF} />
               <TargetValidasiForm form={form} set={setF} />
 

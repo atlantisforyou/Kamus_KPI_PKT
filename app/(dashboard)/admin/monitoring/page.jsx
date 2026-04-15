@@ -36,7 +36,7 @@ const Ico = {
 
 const StatBadge = ({ s }) => {
   const c = STATUS_CONFIG[s] || STATUS_CONFIG.draft;
-  return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: c.bg, color: c.c }}>{c.l}</span>;
+  return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: c.bg, color: c.c }}>{c.label}</span>;
 };
 
 // ── Modal Detail ──────────────────────────────────────────────
@@ -110,7 +110,7 @@ function DetailModal({ k, onClose, onReview }) {
               }} 
               disabled={ld}
             >
-              {ld ? <><div className="spinner-sm" /> Memproses...</> : 'Reviewed'}
+              {ld ? <><div className="spinner-sm" /> Memproses...</> : 'Review'}
             </button>
           )}
         </div>

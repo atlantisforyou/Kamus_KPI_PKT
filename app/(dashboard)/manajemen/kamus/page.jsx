@@ -82,7 +82,25 @@ export default function KamusPage() {
     });
   };
 
-const handleSubmit = async (statusBtn) => {
+  const handleAutoFill = (kpiData) => {
+    setForm(p => ({
+      ...p,
+      nama_kpi: kpiData.nama_kpi || '',
+      definisi_kpi: kpiData.definisi_kpi || '',
+      tujuan_kpi: kpiData.tujuan_kpi || '',
+      tipe_kpi: kpiData.tipe_kpi || '',
+      formula_penilaian: kpiData.formula_penilaian || '',
+      jenis_pengukuran: kpiData.jenis_pengukuran || '',
+      polaritas: kpiData.polaritas || '',
+      frekuensi: kpiData.frekuensi || '',
+      sumber_data: kpiData.sumber_data || '',
+      satuan: kpiData.satuan || '',
+      validitas: kpiData.validitas || '',
+      nilai_maksimum: kpiData.nilai_maksimum || ''
+    }));
+  };
+
+  const handleSubmit = async (statusBtn) => {
     const finalStatus = statusBtn === 'submitted' ? 'reviewed' : statusBtn;
 
     if (finalStatus === 'reviewed') {
@@ -195,7 +213,7 @@ const handleSubmit = async (statusBtn) => {
 
           {ui.ldR ? <div className="loading-overlay">{Ico.Spin} Memuat data KPI...</div> : (
             <>
-              <InformasiDasarForm form={form} set={setF} />
+              <InformasiDasarForm form={form} set={setF} handleAutoFill={handleAutoFill} />
               <KarakteristikKPIForm form={form} set={setF} />
               <TargetValidasiForm form={form} set={setF} />
 

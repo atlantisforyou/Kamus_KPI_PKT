@@ -143,8 +143,95 @@ export function AutocompleteSasaran({ value, onChange }) {
   );
 }
 
+// KOMPONEN AUTOCOMPLETE NAMA KPI KHUSUS (AUTO-FILL)
+export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
+  const [query, setQuery] = useState(value || '');
+  const [pilihan, setPilihan] = useState([]);
+  const [bukaDropdown, setBukaDropdown] = useState(false);
+  const [masterData, setMasterData] = useState([]);
+
+  useEffect(() => {
+    const fetchMaster = async () => {
+      try {
+        const res = await fetch('/api/kamus/master'); // Pastikan API ini sudah dibuat
+        const data = await res.json();
+        setMasterData(data);
+      } catch (error) {
+        console.error("Gagal load master KPI:", error);
+      }
+    };
+    fetchMaster();
+  }, []);
+
+  const handleKetik = (e) => {
+    const teks = e.target.value;
+    setQuery(teks);
+    onChange(e);
+    if (teks.length >= 2) {
+      const filter = masterData.filter(kpi => 
+        kpi.nama_kpi && kpi.nama_kpi.toLowerCase().includes(teks.toLowerCase())
+      );
+      setPilihan(filter);
+      setBukaDropdown(true);
+    } else {
+      setBukaDropdown(false);
+    }
+  };
+
+  const handlePilih = (kpiData) => {
+    setQuery(kpiData.nama_kpi);
+    setBukaDropdown(false);
+    
+    onChange({ target: { value: kpiData.nama_kpi } });
+    
+    if (onAutoFill) {
+      onAutoFill(kpiData);
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <input
+        type="text"
+        value={query}
+        onChange={handleKetik}
+        placeholder="Cari atau ketik Nama KPI baru..."
+        style={baseInput}
+        onFocus={(e) => {
+          focus(e);
+          if (query.length >= 2 && pilihan.length > 0) setBukaDropdown(true);
+        }}
+        onBlur={(e) => {
+          blur(e);
+          setTimeout(() => setBukaDropdown(false), 200); 
+        }}
+      />
+      {bukaDropdown && pilihan.length > 0 && (
+        <ul style={{
+          position: 'absolute', zIndex: 50, width: '100%', background: '#fff',
+          border: '1.5px solid #e5eaf0', borderRadius: 8, marginTop: 4,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 250, overflowY: 'auto',
+          listStyle: 'none', padding: 0
+        }}>
+          {pilihan.map((item, idx) => (
+            <li
+              key={idx}
+              onMouseDown={() => handlePilih(item)}
+              style={{ padding: '10px 14px', borderBottom: '1px solid #f0f4f8', cursor: 'pointer', fontSize: 13 }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+            >
+              <div style={{ color: '#374151', fontWeight: 600 }}>{item.nama_kpi}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ─── 1. FORM INFORMASI DASAR ────────────────────────────────────────────
-export function InformasiDasarForm({ form, set }) {
+export function InformasiDasarForm({ form, set, handleAutoFill }) {
   return (
     <SectionCard title="Informasi Dasar & Strategis">
       <FieldRow label="Perspektif Balanced Scorecard" req>
@@ -156,7 +243,11 @@ export function InformasiDasarForm({ form, set }) {
       </FieldRow>
       
       <FieldRow label="Nama KPI" req>
-        <TextInput value={form.nama_kpi} onChange={set('nama_kpi')} placeholder="Contoh: Akurasi Laporan Keuangan" />
+          <AutocompleteNamaKPI 
+            value={form.nama_kpi} 
+            onChange={set('nama_kpi')} 
+            onAutoFill={handleAutoFill}
+          />
       </FieldRow>
       <FieldRow label="Definisi KPI" req>
         <TextArea value={form.definisi_kpi} onChange={set('definisi_kpi')} placeholder="Jelaskan apa yang diukur oleh KPI ini..." />
