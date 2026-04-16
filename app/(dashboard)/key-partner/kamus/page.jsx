@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { InformasiDasarForm, KarakteristikKPIForm, TargetValidasiForm } from '@/components/ui/FormComponents';
-import Swal from 'sweetalert2'; // Tambahkan SweetAlert2
+import Swal from 'sweetalert2';
+import { useRouter } from 'next/navigation';
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
@@ -162,10 +163,55 @@ export default function KamusPage() {
   const [filter, setFilter] = useState({ q: '', s: '' });
   const [kamus, setKamus] = useState([]);
   const [form, setForm]   = useState(INIT_FORM);
-  const [selKpi, setSelKpi] = useState(null); // State untuk buka modal detail
+  const [selKpi, setSelKpi] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   const fetchKamus = async () => { setUi(p => ({ ...p, ldL: true })); try { const r = await fetch('/api/kamus'); const d = await r.json(); setKamus(d.data || []); } catch {} finally { setUi(p => ({ ...p, ldL: false })); } };
   useEffect(() => { if (ui.v === 'list') fetchKamus(); }, [ui.v]);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsImporting(true);
+    try {
+        const res = await fetch('/api/kamus/import', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await res.json();
+        
+        if (res.ok) {
+            Swal.fire({
+                title: "Berhasil!",
+                text: result.message,
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+            });
+            fetchKamus();
+        } else {
+            Swal.fire({
+                title: "Gagal!",
+                text: result.error || 'Gagal import data',
+                icon: "error"
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            title: "Error!",
+            text: 'Terjadi kesalahan sistem saat import Excel.',
+            icon: "error"
+        });
+    } finally {
+        setIsImporting(false);
+        e.target.value = null;
+    }
+};
 
   const openRevisi = async (id) => {
     setUi(p => ({ ...p, err: '', id, v: 'revisi', ldR: true }));
@@ -201,7 +247,6 @@ export default function KamusPage() {
       const r = await fetch(isRev ? `/api/kamus/${ui.id}` : '/api/kamus', { method: isRev ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, status }) });
       if (!r.ok) throw new Error((await r.json()).error || 'Gagal menyimpan');
       
-      // Tampilkan notifikasi sukses modern pakai SweetAlert2
       Swal.fire({
         title: "Berhasil!",
         text: status === 'draft' ? "Draft berhasil disimpan!" : "Kamus KPI berhasil diperbarui!",
@@ -212,7 +257,6 @@ export default function KamusPage() {
 
       setTimeout(goBack, 1200);
     } catch (e) { 
-      // Tampilkan error menggunakan SweetAlert2
       Swal.fire({
         title: "Gagal!",
         text: e.message || 'Terjadi kesalahan sistem',
@@ -234,13 +278,42 @@ export default function KamusPage() {
       {/* ══════════ LIST VIEW (KUMPULAN DATABASE) ══════════ */}
       {ui.v === 'list' && (
         <div>
-          <div className="page-header">
-            <div>
-              <h1>Database Kamus KPI Unit</h1>
-              <p style={{ fontSize: 14, color: '#7a8b9a', marginTop: 4 }}>Kumpulan dan referensi KPI untuk unit kerja Anda.</p>
-            </div>
-            <button className="btn btn-primary" onClick={() => { setForm(INIT_FORM); setUi(p => ({ ...p, v: 'tambah', stat: '', err: '' })); }}>{Ico.Add} Tambah Kamus KPI Baru</button>
+        <div className="page-header">
+          <div>
+            <h1>Database Kamus KPI Unit</h1>
+            <p style={{ fontSize: 14, color: '#7a8b9a', marginTop: 4 }}>Kumpulan dan referensi KPI untuk unit kerja Anda.</p>
           </div>
+          
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input 
+                type="file" 
+                accept=".xlsx, .xls" 
+                onChange={handleFileUpload} 
+                style={{ display: 'none' }} 
+                id="import-excel"
+            />
+            <label 
+                htmlFor="import-excel" 
+                className="btn"
+                style={{ 
+                    background: '#f97316', 
+                    color: '#fff', 
+                    cursor: isImporting ? 'not-allowed' : 'pointer',
+                    opacity: isImporting ? 0.7 : 1
+                }}
+            >
+                {isImporting ? (
+                    <><div className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Memproses...</>
+                ) : (
+                    'Import Excel'
+                )}
+            </label>
+
+            <button className="btn btn-primary" onClick={() => { setForm(INIT_FORM); setUi(p => ({ ...p, v: 'tambah', stat: '', err: '' })); }}>
+                {Ico.Add} Tambah Kamus KPI Baru
+            </button>
+          </div>
+        </div>
 
           <div className="toolbar">
             <div className="search-box">{Ico.Search}<input placeholder="Cari nama KPI..." value={filter.q} onChange={e => setFilter(p => ({ ...p, q: e.target.value }))} /></div>
@@ -266,7 +339,6 @@ export default function KamusPage() {
                     <td style={{ color: '#b0bcc8', fontSize: 13 }}>{i + 1}</td>
                     <td><span style={{ fontWeight: 600, color: '#1a2b4a' }}>{k.nama_kpi}</span></td>
                     
-                    {/* Menampilkan pembuat agar berfungsi seperti database kumpulan */}
                     <td>
                       <div style={{ fontWeight: 500 }}>{k.pembuat_nama || '-'}</div>
                       <div style={{ fontSize: 12, color: '#7a8b9a' }}>{k.pembuat_unit || '-'}</div>
@@ -278,17 +350,14 @@ export default function KamusPage() {
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         
-                        {/* Tombol Lihat Detail Read-only */}
                         <button className="btn-detail" onClick={() => setSelKpi(k)}>{Ico.Detail} Detail</button>
                         
-                        {/* Tombol Edit/Revisi */}
                         {['draft', 'submitted', 'revisi'].includes(k.status) && (
                           <button className={k.status === 'revisi' ? 'btn-revisi' : 'btn-edit'} onClick={() => openRevisi(k.id)}>
                             {Ico.Edit} {k.status === 'revisi' ? 'Perbaiki Revisi' : 'Edit'}
                           </button>
                         )}
                         
-                        {/* Tombol Export bila sudah disetujui */}
                         {k.status === 'approved' && <a href={`/api/kamus/${k.id}/export`} target="_blank" rel="noopener noreferrer" className="btn-export">{Ico.Exp} Export</a>}
                       </div>
                     </td>
@@ -300,7 +369,7 @@ export default function KamusPage() {
         </div>
       )}
 
-      {/* ══════════ FORM VIEW (TAMBAH / EDIT) ══════════ */}
+      {/* FORM VIEW (TAMBAH / EDIT) */}
       {(ui.v === 'tambah' || ui.v === 'revisi') && (
         <div>
           <div className="page-header">

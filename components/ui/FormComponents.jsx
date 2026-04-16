@@ -143,7 +143,7 @@ export function AutocompleteSasaran({ value, onChange }) {
   );
 }
 
-// KOMPONEN AUTOCOMPLETE NAMA KPI KHUSUS (AUTO-FILL)
+// KOMPONEN AUTOCOMPLETE NAMA KPI KHUSUS (AUTO-FILL) DARI ACUAN VP
 export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
   const [query, setQuery] = useState(value || '');
   const [pilihan, setPilihan] = useState([]);
@@ -153,11 +153,13 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
   useEffect(() => {
     const fetchMaster = async () => {
       try {
-        const res = await fetch('/api/kamus/master'); // Pastikan API ini sudah dibuat
-        const data = await res.json();
-        setMasterData(data);
+        const currentYear = new Date().getFullYear().toString();
+        const res = await fetch(`/api/kamus?type=acuan_vp`);
+        
+        const responseJson = await res.json();
+        setMasterData(responseJson.data || []); 
       } catch (error) {
-        console.error("Gagal load master KPI:", error);
+        console.error("Gagal load master KPI dari VP:", error);
       }
     };
     fetchMaster();
@@ -195,11 +197,16 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
         type="text"
         value={query}
         onChange={handleKetik}
-        placeholder="Cari atau ketik Nama KPI baru..."
+        placeholder="Cari referensi KPI dari VP, atau ketik baru..."
         style={baseInput}
         onFocus={(e) => {
           focus(e);
-          if (query.length >= 2 && pilihan.length > 0) setBukaDropdown(true);
+          if (query.length >= 2 && pilihan.length > 0) {
+              setBukaDropdown(true);
+          } else if (query.length === 0 && masterData.length > 0) {
+              setPilihan(masterData);
+              setBukaDropdown(true);
+          }
         }}
         onBlur={(e) => {
           blur(e);
@@ -222,6 +229,9 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
               onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
             >
               <div style={{ color: '#374151', fontWeight: 600 }}>{item.nama_kpi}</div>
+              <div style={{ fontSize: 11, color: '#7a8b9a', marginTop: 2 }}>
+                Acuan dari: {item.pembuat_nama}
+              </div>
             </li>
           ))}
         </ul>

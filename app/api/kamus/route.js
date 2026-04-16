@@ -11,20 +11,50 @@ export async function GET(request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
-    
     const type = searchParams.get('type');
     const keyword = searchParams.get('q');
-
+    const periodeFilter = searchParams.get('periode');
     if (type === 'sasaran') {
-      if (!keyword) return NextResponse.json([]);
-      const querySasaran = `SELECT id, bidang, sasaran FROM master_sasaran WHERE sasaran LIKE ? LIMIT 10`;
-      const [hasilSasaran] = await db.execute(querySasaran, [`%${keyword}%`]);
+    }
+
+// 🌟 PERBAIKAN Endpoint untuk Karyawan mengambil Acuan KPI dari VP
+    if (type === 'acuan_vp') {
+      const targetPeriode = periodeFilter; 
       
-      return NextResponse.json(hasilSasaran);
+      // Beri nilai default 0 jika departemen_id / kompartemen_id kosong 
+      // agar tidak terjadi error SQL saat membandingkan NULL
+      const deptId = user.departemen_id || 0;
+      const kompId = user.kompartemen_id || 0;
+
+      let queryAcuan = `
+        SELECT k.*, p.nama AS pembuat_nama 
+        FROM kamus_kpi k 
+        JOIN karyawan p ON k.dibuat_oleh = p.id 
+        WHERE p.role = 'manajemen' 
+          AND (p.departemen_id = ? OR p.kompartemen_id = ?)
+      `;
+      let paramsAcuan = [deptId, kompId];
+
+      // Jika frontend mengirim parameter periode, tambahkan ke query
+      if (targetPeriode) {
+          queryAcuan += ` AND k.periode = ?`;
+          paramsAcuan.push(targetPeriode);
+      }
+
+      queryAcuan += ` ORDER BY k.nama_kpi ASC`;
+
+      // Console log ini untuk membantu Anda mengecek di terminal/CMD 
+      // apakah parameter yang dikirim sudah benar
+      console.log("🔍 CEK ACUAN VP - Parameter Dept:", deptId, "Komp:", kompId, "Periode:", targetPeriode);
+
+      const [hasilAcuan] = await db.execute(queryAcuan, paramsAcuan);
+      
+      console.log("✅ Ditemukan:", hasilAcuan.length, "KPI dari VP");
+
+      return NextResponse.json({ data: hasilAcuan });
     }
 
     const statusFilter = searchParams.get('status');
-
     let query = '';
     let params = [];
 
@@ -162,6 +192,7 @@ export async function POST(request) {
 
     const body = await request.json();
     const finalStatus = body.status || 'draft';
+    const currentYear = new Date().getFullYear().toString();
 
     const [result] = await db.execute(`
       INSERT INTO kamus_kpi (
@@ -170,8 +201,8 @@ export async function POST(request) {
         target_jan, target_feb, target_mar, target_apr, target_mei, target_jun,
         target_jul, target_agt, target_sep, target_okt, target_nov, target_des,
         target_tahunan, sumber_data, satuan, validitas, nilai_maksimum,
-        dibuat_oleh, status
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        dibuat_oleh, status, periode
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `, [
       body.perspektif_bsc, body.sasaran_strategis, body.nama_kpi,
       body.definisi_kpi, body.tujuan_kpi, body.tipe_kpi,
@@ -182,7 +213,7 @@ export async function POST(request) {
       body.target_sep || null, body.target_okt || null, body.target_nov || null, body.target_des || null,
       body.target_tahunan || null, body.sumber_data, body.satuan,
       body.validitas, body.nilai_maksimum || null,
-      user.id, finalStatus,
+      user.id, finalStatus, body.periode || currentYear
     ]);
 
     return NextResponse.json({ success: true, id: result.insertId });

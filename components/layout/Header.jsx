@@ -26,17 +26,22 @@ export default function Header({ onLogout, loggingOut }) {
 
   const [u, setU] = useState({});
 
-  useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => d.user && setU(d.user)).catch(() => {});
-  }, []);
+    useEffect(() => {
+      fetch('/api/auth/me')
+        .then(r => r.json())
+        .then(d => d.user && setU(d.user))
+        .catch(() => {});
+    }, []);
 
-  const name = u.nama || roleLabel;
-  const initial = name.charAt(0).toUpperCase();
-  const roleDisplay = u.unit_kerja || roleLabel;
+    const name = u.nama || roleLabel;
+    const initial = name.charAt(0).toUpperCase();
+    
+    const roleDisplay = u.npk ? `NPK: ${u.npk}` : (u.unit_kerja || roleLabel);
 
-  return (
+    return (
     <>
       <style>{`
+        /* ... (CSS Anda tetap sama) ... */
         .topbar-modern {
           display: flex; justify-content: space-between; align-items: center;
           height: 70px; background: #ffffff; padding: 0 24px;

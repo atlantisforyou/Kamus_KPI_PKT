@@ -147,17 +147,26 @@ export default function Sidebar({ role, user, isOpen, isCollapsed, toggleCollaps
           <div className="role-badge">{ROLE_LABEL[role] || role}</div>
         </div>
 
-        {/* Menu Navigasi */}
         <nav className="nav">
-          {(MENUS[role] || []).map(({ href, label, icon }) => (
-            <Link 
-              key={href} href={href} onClick={onClose}
-              className={`nav-item ${pathname === href || (href !== `/${role}` && pathname.startsWith(href)) ? 'active' : ''}`} 
-            >
-              <Icon name={icon} size={18} />
-              <span className="nav-text" style={{ marginLeft: isCollapsed ? 0 : 12 }}>{label}</span>
-            </Link>
-          ))}
+          {(MENUS[role] || []).map(({ href, label, icon }) => {
+            const rolePath = `/${role.replace('_', '-')}`;
+            
+            const isActive = href === rolePath 
+                ? pathname === href 
+                : pathname.startsWith(href);
+
+            return (
+              <Link
+                key={href} 
+                href={href} 
+                onClick={onClose}
+                className={`nav-item ${isActive ? 'active' : ''}`}
+              >
+                <Icon name={icon} size={18} />
+                <span className="nav-text" style={{ marginLeft: isCollapsed ? 0 : 12 }}>{label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="sidebar-footer">

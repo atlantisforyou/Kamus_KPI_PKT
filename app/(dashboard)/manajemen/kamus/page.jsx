@@ -6,6 +6,7 @@ import { InformasiDasarForm, KarakteristikKPIForm, TargetValidasiForm } from '@/
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 
 const INIT_FORM = {
+  periode: new Date().getFullYear().toString(),
   perspektif_bsc: '', sasaran_strategis: '', nama_kpi: '', definisi_kpi: '', tujuan_kpi: '', tipe_kpi: '', formula_penilaian: '', jenis_pengukuran: '',
   polaritas: '', frekuensi: '', target_jan: '', target_feb: '', target_mar: '', target_apr: '', target_mei: '', target_jun: '', target_jul: '', target_agt: '', target_sep: '', target_okt: '',
   target_nov: '', target_des: '', target_tahunan: '', sumber_data: '', satuan: '', validitas: '', nilai_maksimum: '',
@@ -39,7 +40,7 @@ const StatBadge = ({ s }) => {
 
 export default function KamusPage() {
   const [ui, setUi]       = useState({ v: 'list', id: null, stat: '', ldL: true, ldF: false, ldR: false, err: '', msg: '' });
-  const [flt, setFlt]     = useState({ q: '', s: '' });
+  const [flt, setFlt]     = useState({ q: '', s: '', p: new Date().getFullYear().toString() });
   const [kamus, setKamus] = useState([]);
   const [form, setForm]   = useState(INIT_FORM);
 
@@ -142,25 +143,49 @@ export default function KamusPage() {
     } catch (e) { setUi(p => ({ ...p, err: e.message, ldF: false })); }
   };
 
-  const filtered = kamus.filter(k => (!flt.s || k.status === flt.s) && (k.nama_kpi?.toLowerCase().includes(flt.q.toLowerCase()) || k.perspektif_bsc?.toLowerCase().includes(flt.q.toLowerCase())));
+  const handleSalin = (kpi) => {
+    const nextYear = kpi.periode ? (parseInt(kpi.periode) + 1).toString() : new Date().getFullYear().toString();
+    
+    const duplicatedData = { ...kpi, id: null, status: 'draft', periode: nextYear };
+    setForm(duplicatedData);
+    setUi(p => ({ ...p, v: 'tambah', stat: '', err: '', msg: '' }));
+  };
+
+const filtered = kamus.filter(k => 
+    (!flt.s || k.status === flt.s) && 
+    (!flt.p || (k.periode || new Date().getFullYear().toString()) === flt.p) && // Filter Periode
+    (k.nama_kpi?.toLowerCase().includes(flt.q.toLowerCase()) || k.perspektif_bsc?.toLowerCase().includes(flt.q.toLowerCase()))
+  );
+  
   const formatTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
   return (
     <>
       <style>{CSS}</style>
 
-      {/* LIST VIEW */}
       {ui.v === 'list' && (
         <div>
           <div className="page-header">
-            <h1>Kamus KPI Saya</h1>
+            <div>
+                <h1>Kamus KPI Manajemen Unit</h1>
+                <p style={{ fontSize: 13, color: '#7a8b9a', marginTop: 4 }}>Kamus ini akan menjadi acuan (diturunkan) untuk karyawan di unit Anda.</p>
+            </div>
             <button className="btn btn-primary" onClick={() => { setForm(INIT_FORM); setUi(p => ({ ...p, v: 'tambah', stat: '', err: '' })); }}>
-              {Ico.Add} Tambah Kamus KPI
+              {Ico.Add} Buat Master Kamus
             </button>
           </div>
 
           <div className="toolbar">
             <div className="search-box">{Ico.Search}<input placeholder="Cari nama KPI..." value={flt.q} onChange={e => setFlt(p => ({ ...p, q: e.target.value }))} /></div>
+            
+            <select className="filter-select" value={flt.p} onChange={e => setFlt(p => ({ ...p, p: e.target.value }))}>
+              <option value="">Semua Periode</option>
+              <option value="2024">Tahun 2024</option>
+              <option value="2025">Tahun 2025</option>
+              <option value="2026">Tahun 2026</option>
+              <option value="2027">Tahun 2027</option>
+            </select>
+
             <select className="filter-select" value={flt.s} onChange={e => setFlt(p => ({ ...p, s: e.target.value }))}>
               <option value="">Semua Status</option>
               {Object.entries(STAT_CFG).map(([k, v]) => <option key={k} value={k}>{v.l}</option>)}
@@ -172,23 +197,28 @@ export default function KamusPage() {
              filtered.length === 0 ? (
               <div className="loading-overlay" style={{ flexDirection: 'column', gap: 12 }}>
                 {Ico.Empty}
-                <p>{flt.q || flt.s ? 'Tidak ada hasil pencarian.' : 'Belum ada KPI. Klik "+ Tambah Kamus KPI" untuk mulai.'}</p>
+                <p>{flt.q || flt.s ? 'Tidak ada hasil pencarian.' : 'Belum ada KPI. Klik "Buat Master Kamus" untuk mulai.'}</p>
               </div>
             ) : (
               <table>
-                <thead><tr><th>#</th><th>Nama KPI</th><th>Perspektif BSC</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>#</th><th>Periode</th><th>Nama KPI</th><th>Perspektif</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
                 <tbody>
                   {filtered.map((k, i) => (
                     <tr key={k.id}>
                       <td style={{ color: '#b0bcc8', fontSize: 13 }}>{i + 1}</td>
+                      <td><span style={{ fontWeight: 700, color: '#d97706', background: '#fef3c7', padding: '3px 8px', borderRadius: 4, fontSize: 12 }}>{k.periode || '2024'}</span></td>
                       <td><span style={{ fontWeight: 600, color: '#1a2b4a' }}>{k.nama_kpi}</span></td>
                       <td style={{ fontSize: 13, color: '#7a8b9a' }}>{k.perspektif_bsc || '-'}</td>
                       <td style={{ fontSize: 13, color: '#7a8b9a', whiteSpace: 'nowrap' }}>{formatTgl(k.created_at)}</td>
                       <td><StatBadge s={k.status} /></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <button className="btn-revisi" onClick={() => openRevisi(k.id)}>{Ico.Edit} {k.status === 'revisi' ? 'Perbaiki Revisi' : 'Revisi/Edit'}</button>
-                          {k.status === 'approved' && <a href={`/api/kamus/${k.id}/export`} target="_blank" rel="noopener noreferrer" className="btn-export">{Ico.Exp} Export</a>}
+                          <button className="btn-revisi" onClick={() => openRevisi(k.id)}>{Ico.Edit} Edit</button>
+                          
+                          <button className="btn-edit" onClick={() => handleSalin(k)} style={{ background: '#f3e8ff', color: '#9333ea' }} title="Salin KPI ini sebagai acuan tahun berikutnya">
+                            {Ico.Add} Salin Baru
+                          </button>
+
                         </div>
                       </td>
                     </tr>
@@ -205,7 +235,7 @@ export default function KamusPage() {
         <div>
           <div className="page-header">
             <div>
-              <h1>{ui.v === 'revisi' ? (ui.stat === 'revisi' ? 'Perbaiki Revisi KPI' : 'Revisi/Edit Kamus KPI') : 'Tambah Kamus KPI'}</h1>
+              <h1>{ui.v === 'revisi' ? 'Edit Master Kamus KPI' : 'Buat Master Kamus KPI'}</h1>
               <p style={{ fontSize: 14, color: '#7a8b9a', margin: '4px 0 0' }}>Field bertanda <span style={{ color: '#dc2626' }}>*</span> wajib diisi.</p>
             </div>
             <button className="btn btn-secondary" onClick={goBack}>{Ico.Back} Kembali</button>
@@ -213,6 +243,16 @@ export default function KamusPage() {
 
           {ui.ldR ? <div className="loading-overlay">{Ico.Spin} Memuat data KPI...</div> : (
             <>
+              <div style={{ marginBottom: 16, background: '#fff', padding: 16, borderRadius: 10, border: '1.5px solid #e5eaf0' }}>
+                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1a2b4a', marginBottom: 8 }}>Periode Berlakunya KPI <span style={{ color: '#dc2626' }}>*</span></label>
+                 <select className="filter-select" style={{ width: '100%', maxWidth: 300 }} value={form.periode} onChange={setF('periode')}>
+                    <option value="2024">Tahun 2024</option>
+                    <option value="2025">Tahun 2025</option>
+                    <option value="2026">Tahun 2026</option>
+                    <option value="2027">Tahun 2027</option>
+                 </select>
+              </div>
+
               <InformasiDasarForm form={form} set={setF} handleAutoFill={handleAutoFill} />
               <KarakteristikKPIForm form={form} set={setF} />
               <TargetValidasiForm form={form} set={setF} />
