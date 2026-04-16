@@ -87,7 +87,6 @@ export async function GET(request, context) {
     const k = rows[0];
     const noDoc = `KPI-${String(k.id).padStart(4, '0')}`;
 
-    // ── Target bulanan table ──────────────────────────
     const targetHeaderCells = BULAN_LABEL.map(b =>
       new TableCell({
         borders,
@@ -118,7 +117,6 @@ export async function GET(request, context) {
       ],
     });
 
-    // ── Build document ────────────────────────────────
     const doc = new Document({
       styles: {
         default: { document: { run: { font: 'Arial', size: 24 } } },
@@ -131,7 +129,6 @@ export async function GET(request, context) {
           },
         },
         children: [
-          // ── Header dokumen ──
           new Paragraph({
             alignment: AlignmentType.CENTER,
             spacing: { after: 0 },
@@ -144,7 +141,7 @@ export async function GET(request, context) {
           }),
           new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-          // ── Judul KPI ──
+          // Judul KPI
           new Paragraph({
             alignment: AlignmentType.CENTER,
             spacing: { after: 60 },
@@ -156,7 +153,7 @@ export async function GET(request, context) {
             children: [new TextRun({ text: k.sasaran_strategis || '', size: 22, font: 'Arial', color: '6B7280', italics: true })],
           }),
 
-          // ── Informasi Dasar ──
+          // Informasi Dasar
           sectionHeader('Informasi Dasar'),
           new Table({
             width: { size: 9026, type: WidthType.DXA },
@@ -173,7 +170,7 @@ export async function GET(request, context) {
           }),
           new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-          // ── Karakteristik ──
+          // Karakteristik
           sectionHeader('Karakteristik KPI'),
           new Table({
             width: { size: 9026, type: WidthType.DXA },
@@ -192,7 +189,7 @@ export async function GET(request, context) {
           }),
           new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-          // ── Target Bulanan ──
+          // Target Bulanan
           sectionHeader('Target Bulanan'),
           targetTable,
           new Paragraph({ spacing: { after: 120 }, children: [] }),
@@ -238,7 +235,7 @@ export async function GET(request, context) {
           }),
           new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-          // ── Info Approval ──
+          // Info Approval
           sectionHeader('Informasi Persetujuan'),
           new Table({
             width: { size: 9026, type: WidthType.DXA },
@@ -251,7 +248,7 @@ export async function GET(request, context) {
           }),
           new Paragraph({ spacing: { after: 400 }, children: [] }),
 
-          // ── Footer ──
+          // Footer
           new Paragraph({
             alignment: AlignmentType.CENTER,
             border: { top: { style: BorderStyle.SINGLE, size: 2, color: 'E5E7EB', space: 6 } },

@@ -14,7 +14,6 @@ export async function GET(request) {
     let query = '';
     let params = [];
 
-    // 1. Ambil data gabungan Karyawan dan KPI-nya menggunakan INNER JOIN
     if (user.role === 'admin') {
       query = `
         SELECT 
@@ -47,9 +46,6 @@ export async function GET(request) {
 
     const [rows] = await db.execute(query, params);
 
-// ... (kode GET atasnya tetap sama) ...
-
-    // 2. Proses Grouping (Mengubah data flat SQL menjadi array bersarang)
     const groupedData = {};
 
     for (const row of rows) {
@@ -78,7 +74,6 @@ export async function GET(request) {
           target_tahunan: row.target_tahunan,
           status: row.status,
           created_at: row.created_at,
-          // 👇 TARIK SEMUA BULAN DARI DATABASE
           target_jan: row.target_jan, realisasi_jan: row.realisasi_jan,
           target_feb: row.target_feb, realisasi_feb: row.realisasi_feb,
           target_mar: row.target_mar, realisasi_mar: row.realisasi_mar,
@@ -95,7 +90,6 @@ export async function GET(request) {
       }
     }
 
-    // 3. Ubah objek menjadi array dan HITUNG RUMUS PERSENTASE
     const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 
     const hasilAkhir = Object.values(groupedData).map(karyawan => {
@@ -105,7 +99,6 @@ export async function GET(request) {
       karyawan.kpi.forEach(k => {
         if (k.status !== 'approved') return; 
 
-        // Hitung rata-rata capaian dari bulan yang memiliki target
         let subTotalBulan = 0;
         let bulanValid = 0;
 
@@ -129,11 +122,8 @@ export async function GET(request) {
         }
       });
 
-      // Hitung rata-rata akhir
       let rawProgress = kpiValid === 0 ? 0 : Math.round(totalPencapaian / kpiValid);
       
-      // CATATAN: Jika Anda ingin membatasi maksimal 100%, biarkan kode di bawah ini.
-      // Jika boleh menembus 100% (misal 120%), ganti angkanya atau hapus logika ternary-nya.
       karyawan.progressPct = rawProgress > 100 ? 100 : rawProgress;
 
       return karyawan;

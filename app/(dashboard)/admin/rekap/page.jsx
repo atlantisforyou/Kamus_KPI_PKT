@@ -370,7 +370,6 @@ export default function RekapPage() {
         .emp-dept { font-size: 13px; color: #334155; font-weight: 500; flex: 1; text-align: center; }
         .emp-score-text { font-size: 13px; font-weight: 700; color: #334155; display: flex; flex-direction: column; align-items: flex-end; }
 
-        /* Employee Details (Table) */
         .employee-detail { padding: 20px; background: #fff; }
         .detail-title { font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 12px; letter-spacing: 0.5px; }
         
@@ -380,7 +379,6 @@ export default function RekapPage() {
         .kpi-table td { padding: 14px 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .kpi-table tr:last-child td { border-bottom: none; }
         
-        /* Tombol Detail Baru */
         .btn-detail {
           display: inline-flex;
           align-items: center;
@@ -403,7 +401,6 @@ export default function RekapPage() {
 
         .eval-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap; gap: 12px; }
 
-        /* ── MODAL STYLES ── */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
         .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -490,7 +487,6 @@ export default function RekapPage() {
         </div>
       </div>
 
-      {/* Render Modal Detail */}
       <KpiDetailModal 
         kpi={selectedKpi} 
         onClose={() => setSelectedKpi(null)} 

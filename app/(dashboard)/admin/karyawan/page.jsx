@@ -15,7 +15,6 @@ const Ico = {
   Info: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>,
   Err: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
   Add: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-  // Ketebalan stroke disamakan menjadi 2.5
   Upload: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
   Search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b0bcc8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   Load: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V2"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>,
@@ -52,7 +51,6 @@ const Fld = ({ l, req, val, onChange, ph, note }) => (
   </div>
 );
 
-// ─── MODAL TAMBAH KARYAWAN ────────────────────────────────────
 function TambahModal({ onClose, onSuccess }) {
   const [f, setF] = useState({ npk: '', nama: '', unit_kerja: '', role: 'user' });
   const [s, setS] = useState({ load: false, err: '' });
@@ -114,7 +112,6 @@ function TambahModal({ onClose, onSuccess }) {
   );
 }
 
-// ─── MODAL IMPORT EXCEL ───────────────────────────────────────
 function ImportModal({ onClose, onSuccess }) {
   const [file, setFile] = useState(null);
   const [s, setS] = useState({ load: false, err: '', msg: '' });
@@ -185,7 +182,7 @@ function ImportModal({ onClose, onSuccess }) {
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────
+// MAIN PAGE
 const CSS = `.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}.page-header-text h1{font-size:22px;font-weight:700;color:#1a2b4a;margin-bottom:6px}.page-header-text p{font-size:14px;color:#7a8b9a}.header-actions{display:flex;gap:10px}.btn-tambah{padding:10px 20px;background:#1a2b4a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:background .2s;flex-shrink:0}.btn-tambah:hover{background:#243d6a}.btn-outline{padding:10px 20px;background:#fff;color:#0f4b8f;border:1.5px solid #0f4b8f;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:all .2s;flex-shrink:0}.btn-outline:hover{background:#eff6ff}.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}.search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5eaf0;border-radius:10px;padding:0 14px}.search-box input{flex:1;border:none;outline:0;font-size:14px;padding:10px 0;font-family:'Plus Jakarta Sans',sans-serif;color:#1a2b4a;background:0 0}.search-box input::placeholder{color:#b0bcc8}.filter-select{padding:10px 12px;border:1.5px solid #e5eaf0;border-radius:10px;font-size:14px;color:#374151;font-family:'Plus Jakarta Sans',sans-serif;background:#fff;cursor:pointer;outline:0}.count-badge{padding:10px 14px;background:#f4f6f9;border-radius:10px;font-size:13px;color:#7a8b9a;white-space:nowrap}.count-badge strong{color:#1a2b4a;margin-right:3px}.view-toggle{display:flex;background:#f4f6f9;border-radius:8px;padding:3px;gap:2px}.view-btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;color:#7a8b9a;background:0 0;transition:all .15s}.view-btn.active{background:#fff;color:#1a2b4a;box-shadow:0 1px 4px rgba(0,0,0,.08)}.group-controls{display:flex;align-items:center;gap:8px;margin-bottom:12px}.btn-xs{padding:5px 12px;border-radius:7px;border:1.5px solid #e5eaf0;font-size:12px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;color:#374151;background:#fff;cursor:pointer}.btn-xs:hover{background:#f4f6f9}.unit-group{margin-bottom:16px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid #e8edf2;background:#fff}.unit-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#f8fafc;cursor:pointer;transition:background .15s;user-select:none;border-bottom:1px solid #e8edf2}.unit-header:hover{background:#f1f5f9}.unit-left{display:flex;align-items:center;gap:12px}.unit-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.unit-name{font-size:15px;font-weight:700;color:#1a2b4a}.unit-count{padding:2px 8px;background:#e2e8f0;border-radius:10px;font-size:11px;font-weight:700;color:#475569}.chevron{transition:transform .2s;color:#94a3b8}.chevron.open{transform:rotate(180deg)}.table-wrap{background:#fff;overflow:hidden;border-top:1px solid #f0f4f8}table{width:100%;border-collapse:collapse}th{text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:#7a8b9a;text-transform:uppercase;letter-spacing:.6px;background:#f8fafc;border-bottom:1px solid #e8edf2}td{padding:11px 16px;font-size:14px;color:#374151;border-bottom:1px solid #f0f4f8;vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfc}.role-select{padding:5px 10px;border:1.5px solid #e5eaf0;border-radius:8px;font-size:13px;font-weight:500;font-family:'Plus Jakarta Sans',sans-serif;background:#fff;cursor:pointer;outline:0;color:#374151}.role-select:focus{border-color:#3b7dd8}.btn-sm{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;border:none;transition:all .15s}.btn-deactivate{background:#fff5f5;color:#dc2626}.btn-deactivate:hover{background:#fee2e2}.btn-activate{background:#f0fdf4;color:#16a34a}.btn-activate:hover{background:#dcfce7}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}.status-dot.active{background:#10b981}.status-dot.inactive{background:#d1d5db}.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;flex-wrap:wrap}.page-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #e5eaf0;background:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;color:#374151;transition:all .15s}.page-btn:hover:not(:disabled){background:#f4f6f9}.page-btn.active{background:#1a2b4a;color:#fff;border-color:#1a2b4a}.page-btn:disabled{opacity:.35;cursor:not-allowed}.empty,.loading{text-align:center;padding:60px;color:#7a8b9a}.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:999;animation:slideUp .3s ease}.toast.success{background:#10b981}.toast.error{background:#ef4444}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}`;
 
 export default function KelolKaryawanPage() {
@@ -227,7 +224,6 @@ export default function KelolKaryawanPage() {
       (k.unit_kerja || '').toLowerCase().includes(filters.search.toLowerCase()))
   ), [data.list, filters.search, filters.role]);
 
-// LOGIKA GROUPING: Fix Hilangnya Karyawan & Bypass kelemahan SQL NULL
   const treeData = useMemo(() => {
     const dirs = {};
     
@@ -235,7 +231,6 @@ export default function KelolKaryawanPage() {
       const unitName = k.unit_kerja || '';
       const lowerName = unitName.toLowerCase();
 
-      // 1. GABUNGKAN KE MANAJEMEN RISIKO (Jika tidak ada Dir/Komp/Dept, ATAU namanya Manajemen Risiko)
       const isTanpaHierarki = unitName && !lowerName.includes('direktorat') && !lowerName.includes('kompartemen') && !lowerName.includes('departemen');
       const isManajemenRisiko = lowerName.includes('manajemen risiko korporasi');
 
@@ -247,45 +242,36 @@ export default function KelolKaryawanPage() {
         return;
       }
 
-      // 2. BACA HIERARKI (Bypass kelemahan null dari SQL backend)
       let dName = k.nama_dir;
       let kName = k.nama_komp;
       let dpName = k.nama_dept;
 
-      // Jika dari database null, tapi di unit_kerja ada kata kuncinya, pakai string dari unit_kerja
       if (!dName && lowerName.includes('direktorat')) dName = unitName;
       if (!kName && lowerName.includes('kompartemen')) kName = unitName;
       if (!dpName && lowerName.includes('departemen')) dpName = unitName;
 
-      // Jika tetap kosong, masukkan ke folder penampung
       if (!dName) dName = 'Direktorat / Unit Lainnya';
 
-      // Buat folder Level 1 (Direktorat)
       if (!dirs[dName]) dirs[dName] = { name: dName, count: 0, isStandalone: false, employees: [], komps: {} };
       dirs[dName].count++;
 
-      // Proses Penempatan
       if (kName) {
         if (!dirs[dName].komps[kName]) dirs[dName].komps[kName] = { name: kName, count: 0, employees: [], depts: {} };
         dirs[dName].komps[kName].count++;
 
         if (dpName) {
-          // Level 3 Lengkap: Punya Dept
           if (!dirs[dName].komps[kName].depts[dpName]) dirs[dName].komps[kName].depts[dpName] = [];
           dirs[dName].komps[kName].depts[dpName].push(k);
         } else {
-          // Level 2 Mentok: Nempel di Kompartemen (Gak punya Dept)
           dirs[dName].komps[kName].employees.push(k); 
         }
       } else if (dpName) {
-         // Punya Dept tapi gak punya Kompartemen (Jarang terjadi)
          const dummyKomp = 'Kompartemen Lainnya';
          if (!dirs[dName].komps[dummyKomp]) dirs[dName].komps[dummyKomp] = { name: dummyKomp, count: 0, employees: [], depts: {} };
          dirs[dName].komps[dummyKomp].count++;
          if (!dirs[dName].komps[dummyKomp].depts[dpName]) dirs[dName].komps[dummyKomp].depts[dpName] = [];
          dirs[dName].komps[dummyKomp].depts[dpName].push(k);
       } else {
-        // Level 1 Mentok: Nempel langsung di Direktorat (Gak punya Komp & Dept)
         dirs[dName].employees.push(k);
       }
     });
@@ -356,7 +342,6 @@ export default function KelolKaryawanPage() {
         <div className="page-header">
           <div className="page-header-text"><h1>Kelola Karyawan</h1><p>Ubah role dan kelola akses. Total <strong>{data.list.length}</strong> karyawan.</p></div>
           <div className="header-actions">
-            {/* PERUBAHAN: Kelas diubah menjadi btn-tambah agar sama dengan tombol Tambah Karyawan */}
             <button className="btn-tambah" onClick={() => setUi(p => ({ ...p, modalImport: true }))}>{Ico.Upload} Import Excel</button>
             <button className="btn-tambah" onClick={() => setUi(p => ({ ...p, modalTambah: true }))}>{Ico.Add} Tambah Karyawan</button>
           </div>
@@ -385,7 +370,6 @@ filters.mode === 'group' ? (
               <span style={{ fontSize: 13, color: '#7a8b9a' }}>{treeData.length} Grup Utama</span>
             </div>
             
-            {/* LEVEL 1: DIREKTORAT / STANDALONE */}
             {treeData.map(dir => (
               <div key={dir.name} className="unit-group">
                 <div className="unit-header" style={{ borderBottom: ui.col[`dir-${dir.name}`] ? 'none' : '1px solid #e8edf2' }} onClick={() => toggleFolder(`dir-${dir.name}`)}>
@@ -403,20 +387,17 @@ filters.mode === 'group' ? (
                   <div style={dir.isStandalone ? {} : { padding: '16px', background: '#f8fafc' }}>
                     
                     {dir.isStandalone ? (
-                      /* KHUSUS STANDALONE (Manajemen Risiko) */
                       <div className="table-wrap" style={{ borderTop: 'none' }}>
                         <table><THead /><tbody>{dir.employees.map(k => <KRow key={k.id} k={k} />)}</tbody></table>
                       </div>
                     ) : (
                       <>
-                        {/* 🌟 KARYAWAN YANG NEMPEL LANGSUNG DI DIREKTORAT */}
                         {dir.employees.length > 0 && (
                           <div className="table-wrap" style={{ border: '1px solid #cbd5e1', borderRadius: '10px', marginBottom: dir.kompsArray.length > 0 ? '16px' : '0' }}>
                             <table><THead /><tbody>{dir.employees.map(k => <KRow key={k.id} k={k} />)}</tbody></table>
                           </div>
                         )}
 
-                        {/* LEVEL 2: KOMPARTEMEN */}
                         {dir.kompsArray.map(komp => (
                           <div key={komp.name} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', marginBottom: '12px', overflow: 'hidden' }}>
                             <div className="unit-header" style={{ padding: '12px 16px', background: '#fff', borderBottom: ui.col[`komp-${dir.name}-${komp.name}`] ? 'none' : '1px solid #f1f5f9' }} onClick={() => toggleFolder(`komp-${dir.name}-${komp.name}`)}>
@@ -431,14 +412,12 @@ filters.mode === 'group' ? (
                             {!ui.col[`komp-${dir.name}-${komp.name}`] && (
                               <div style={{ padding: '12px', background: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
                                 
-                                {/* 🌟 KARYAWAN YANG NEMPEL LANGSUNG DI KOMPARTEMEN */}
                                 {komp.employees.length > 0 && (
                                   <div className="table-wrap" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: komp.deptsArray.length > 0 ? '12px' : '0' }}>
                                     <table><THead /><tbody>{komp.employees.map(k => <KRow key={k.id} k={k} />)}</tbody></table>
                                   </div>
                                 )}
 
-                                {/* LEVEL 3: DEPARTEMEN */}
                                 {komp.deptsArray.map(([deptName, mems]) => (
                                   <div key={deptName} style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
                                     <div className="unit-header" style={{ padding: '10px 14px', background: '#fff' }} onClick={() => toggleFolder(`dept-${dir.name}-${komp.name}-${deptName}`)}>

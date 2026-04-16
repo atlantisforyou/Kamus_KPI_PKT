@@ -92,7 +92,7 @@ tr:hover td{background:#fafbfc}
 
 const StatBadge = ({ s }) => { const c = STAT_CFG[s] || STAT_CFG.draft; return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: c.bg, color: c.c }}>{c.l}</span>; };
 
-// ── KOMPONEN MODAL DETAIL (Sebagai View Database) ──
+// KOMPONEN MODAL DETAIL
 function DetailModal({ k, onClose }) {
   if (!k) return null;
   const DRow = ({ l, v }) => (
@@ -275,7 +275,6 @@ export default function KamusPage() {
     <>
       <style>{CSS}</style>
       
-      {/* ══════════ LIST VIEW (KUMPULAN DATABASE) ══════════ */}
       {ui.v === 'list' && (
         <div>
         <div className="page-header">
@@ -386,7 +385,6 @@ export default function KamusPage() {
               <KarakteristikKPIForm form={form} set={setF} />
               <TargetValidasiForm form={form} set={setF} />
 
-              {/* Tampilkan pesan validasi jika masih ada yg kurang */}
               {ui.err && <div className="error-box">{Ico.Err}{ui.err}</div>}
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '20px 0' }}>

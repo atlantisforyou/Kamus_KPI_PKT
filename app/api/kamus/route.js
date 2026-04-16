@@ -15,14 +15,23 @@ export async function GET(request) {
     const keyword = searchParams.get('q');
     const periodeFilter = searchParams.get('periode');
     if (type === 'sasaran') {
+      if (!keyword) return NextResponse.json([]);
+
+      const querySasaran = `
+        SELECT DISTINCT sasaran_strategis AS sasaran, perspektif_bsc AS bidang 
+        FROM kamus_kpi 
+        WHERE sasaran_strategis LIKE ? AND sasaran_strategis IS NOT NULL
+        LIMIT 10
+      `;
+      
+      const [hasilSasaran] = await db.execute(querySasaran, [`%${keyword}%`]);
+
+      return NextResponse.json(hasilSasaran);
     }
 
-// 🌟 PERBAIKAN Endpoint untuk Karyawan mengambil Acuan KPI dari VP
     if (type === 'acuan_vp') {
       const targetPeriode = periodeFilter; 
       
-      // Beri nilai default 0 jika departemen_id / kompartemen_id kosong 
-      // agar tidak terjadi error SQL saat membandingkan NULL
       const deptId = user.departemen_id || 0;
       const kompId = user.kompartemen_id || 0;
 
@@ -35,7 +44,6 @@ export async function GET(request) {
       `;
       let paramsAcuan = [deptId, kompId];
 
-      // Jika frontend mengirim parameter periode, tambahkan ke query
       if (targetPeriode) {
           queryAcuan += ` AND k.periode = ?`;
           paramsAcuan.push(targetPeriode);
@@ -43,8 +51,6 @@ export async function GET(request) {
 
       queryAcuan += ` ORDER BY k.nama_kpi ASC`;
 
-      // Console log ini untuk membantu Anda mengecek di terminal/CMD 
-      // apakah parameter yang dikirim sudah benar
       console.log("🔍 CEK ACUAN VP - Parameter Dept:", deptId, "Komp:", kompId, "Periode:", targetPeriode);
 
       const [hasilAcuan] = await db.execute(queryAcuan, paramsAcuan);
@@ -84,7 +90,6 @@ export async function GET(request) {
       }
 
  } else if (user.role === 'manajemen') {
-      // ════ Manajemen: HIERARKI APPROVAL ════
       let filterStatusSql = statusFilter ? `AND k.status = '${statusFilter}'` : '';
       const isMine = searchParams.get('mine') === 'true';
 
@@ -95,7 +100,6 @@ export async function GET(request) {
         params = [user.id];
 
       } else if (user.departemen_id) {
-        // LEVEL 1 (VP): Tarik kamus dari 'user' biasa di departemennya
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
                  WHERE p.departemen_id = ? AND p.role = 'user' ${filterStatusSql}
@@ -103,8 +107,6 @@ export async function GET(request) {
         params = [user.departemen_id];
 
       } else if (user.kompartemen_id) {
-        // 🌟 PERBAIKAN LEVEL 2 (SVP):
-        // Gunakan LEFT JOIN ke tabel 'departemen' untuk melacak ke atas kompartemen mana departemen ini bernaung
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k 
                  LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
@@ -116,8 +118,6 @@ export async function GET(request) {
         params = [user.kompartemen_id, user.kompartemen_id];
 
       } else if (user.direktorat_id) {
-        // 🌟 PERBAIKAN LEVEL 3 (Direktur):
-        // Gunakan LEFT JOIN ke tabel 'kompartemen' untuk melacak ke direktorat mana ia bernaung
         query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
                  FROM kamus_kpi k 
                  LEFT JOIN karyawan p ON k.dibuat_oleh = p.id

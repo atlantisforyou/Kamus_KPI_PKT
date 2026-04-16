@@ -31,7 +31,7 @@ const StatBadge = ({ s }) => {
   return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: c.bg, color: c.c, whiteSpace: 'nowrap' }}>{c.l}</span>;
 };
 
-// ─── MODAL DETAIL ────────────────────────────────────────────────
+// MODAL DETAIL
 function DetailModal({ k, onClose, onSubmit }) {
   const [ld, setLd] = useState(false);
   if (!k) return null;
@@ -77,7 +77,7 @@ function DetailModal({ k, onClose, onSubmit }) {
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────
+// MAIN PAGE
 export default function KeyPartnerReviewPage() {
   const [data, setData] = useState({ list: [], load: true });
   const [flt, setFlt]   = useState({ s: '', q: '' });

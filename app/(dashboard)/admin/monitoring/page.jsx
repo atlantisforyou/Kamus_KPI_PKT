@@ -40,7 +40,7 @@ const StatBadge = ({ s }) => {
   return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: c.bg, color: c.c }}>{c.label}</span>;
 };
 
-// ── Modal Detail ──────────────────────────────────────────────
+// Modal Detail
 function DetailModal({ k, onClose, onReview }) {
   const [ld, setLd] = useState(false);
   if (!k) return null;
@@ -120,7 +120,6 @@ function DetailModal({ k, onClose, onReview }) {
   );
 }
 
-// ── MAIN ─────────────────────────────────────────────────────
 export default function MonitoringPage() {
   const [view, setView]     = useState('list');
   const [data, setData]     = useState([]);
@@ -265,7 +264,6 @@ const handleRevisi = async (id, nama) => {
 
   const formatTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
-  // ── STYLES ──────────────────────────────────────────────────
   const S = {
     btn:    { padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: 'Plus Jakarta Sans,sans-serif', cursor: 'pointer', border: 'none', transition: 'all .2s', display: 'inline-flex', alignItems: 'center', gap: 8 },
     tblBtn: { padding: '5px 11px', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans,sans-serif', transition: 'background .15s', display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' },
@@ -322,7 +320,7 @@ const handleRevisi = async (id, nama) => {
         .spinner-sm { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: inherit; border-bottom-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
       `}</style>
 
-      {/* ══════════ LIST ══════════ */}
+      {/* LIST */}
       {view === 'list' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
@@ -413,7 +411,7 @@ const handleRevisi = async (id, nama) => {
         </div>
       )}
 
-      {/* ══════════ FORM TAMBAH ══════════ */}
+      {/* FORM TAMBAH */}
       {view === 'tambah' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>

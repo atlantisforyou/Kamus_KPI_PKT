@@ -342,7 +342,7 @@ const Fld = ({ l, val, onChange, t = "text", p, max, st, autoF, isPass, show, on
   </div>
 );
 
-// ─── FUNGSI UTAMA HALAMAN ───
+// FUNGSI UTAMA HALAMAN
 export default function LoginPage() {
   const router = useRouter();
   const [ui, setUi] = useState({ v: 'login', ld: false, err: '', suc: '' });

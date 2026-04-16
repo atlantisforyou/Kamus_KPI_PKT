@@ -75,22 +75,18 @@ export async function POST(request) {
 
                     // PENCARIAN BERUNTUN: Departemen -> Kompartemen -> Direktorat
                     if (unitKerja !== 'Tanpa Unit Kerja') {
-                        // 1. Cari di Departemen
                         const [deptRows] = await db.execute('SELECT id FROM departemen WHERE nama = ? LIMIT 1', [unitKerja]);
                         if (deptRows.length > 0) {
                             deptId = deptRows[0].id;
                         } else {
-                            // 2. Jika tidak ada, cari di Kompartemen
                             const [kompRows] = await db.execute('SELECT id FROM kompartemen WHERE nama = ? LIMIT 1', [unitKerja]);
                             if (kompRows.length > 0) {
                                 kompId = kompRows[0].id;
                             } else {
-                                // 3. Jika tidak ada, cari di Direktorat
                                 const [dirRows] = await db.execute('SELECT id FROM direktorat WHERE nama = ? LIMIT 1', [unitKerja]);
                                 if (dirRows.length > 0) {
                                     dirId = dirRows[0].id;
                                 } else {
-                                    // 4. Benar-benar tidak ditemukan di database
                                     missingUnitCount++;
                                 }
                             }
@@ -101,13 +97,11 @@ export async function POST(request) {
                     const [existing] = await db.execute('SELECT id FROM karyawan WHERE npk = ?', [npkString]);
                     
                     if (existing.length > 0) {
-                        // UPDATE jika karyawan sudah ada (Update juga ke 3 ID tersebut)
                         await db.execute(
                             'UPDATE karyawan SET nama = ?, departemen_id = ?, kompartemen_id = ?, direktorat_id = ?, unit_kerja = ? WHERE npk = ?',
                             [nama, deptId, kompId, dirId, unitKerja, npkString]
                         );
                     } else {
-                        // INSERT jika karyawan baru
                         await db.execute(
                             'INSERT INTO karyawan (npk, nama, password, role, is_active, departemen_id, kompartemen_id, direktorat_id, unit_kerja, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
                             [npkString, nama, hashedPassword, 'user', 1, deptId, kompId, dirId, unitKerja]
@@ -145,7 +139,6 @@ export async function POST(request) {
             let kompId = null;
             let dirId = null;
 
-            // Pencarian beruntun untuk input manual
             if (unitKerjaManual) {
                 const [deptRows] = await db.execute('SELECT id FROM departemen WHERE nama = ? LIMIT 1', [unitKerjaManual]);
                 if (deptRows.length > 0) deptId = deptRows[0].id;
@@ -161,7 +154,6 @@ export async function POST(request) {
 
             const hashedPassword = await bcrypt.hash(npkUpper, 10);
             
-            // Masukkan data baru beserta ID hierarkinya
             await db.execute(
                 `INSERT INTO karyawan (npk, nama, unit_kerja, departemen_id, kompartemen_id, direktorat_id, password, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
                 [npkUpper, nama.trim(), unitKerjaManual, deptId, kompId, dirId, hashedPassword, role || 'user']

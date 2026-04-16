@@ -26,7 +26,7 @@ function StatusBadge({ status, customLabel }) {
   );
 }
 
-// ── KOMPONEN MODAL DETAIL ─────────────────────────────────────────
+//  MODAL DETAIL
 function KpiDetailModal({ kpi, onClose }) {
   if (!kpi) return null;
 
@@ -94,7 +94,7 @@ function KpiDetailModal({ kpi, onClose }) {
   );
 }
 
-// ── KOMPONEN KARTU KARYAWAN ───────────────────────────────────────
+// KOMPONEN KARTU KARYAWAN
 function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
   const [open, setOpen] = useState(defaultOpen);
 
@@ -156,11 +156,10 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
             <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '13px' }}>Tidak ada KPI.</div>
           ) : (
           <div className="table-responsive">
-              {/* Ambil index bulan saat ini secara otomatis */}
               {(() => {
-                const indexBulanIni = new Date().getMonth(); // 3 untuk April
-                const bulanDb = BULAN[indexBulanIni]; // 'apr'
-                const labelBulan = B_LBL[indexBulanIni]; // 'Apr'
+                const indexBulanIni = new Date().getMonth();
+                const bulanDb = BULAN[indexBulanIni];
+                const labelBulan = B_LBL[indexBulanIni];
 
                 return (
                   <table className="kpi-table">
@@ -170,7 +169,6 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                         <th width="30%">Detail KPI</th>
                         <th width="15%">Polaritas</th>
                         <th width="15%">Target Total</th>
-                        {/* Header otomatis berubah sesuai bulan saat ini */}
                         <th width="10%">Target s.d {labelBulan}</th>
                         <th width="15%">Realisasi s.d {labelBulan}</th>
                         <th width="10%">Aksi</th>
@@ -178,7 +176,6 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                     </thead>
                     <tbody>
                       {filteredKpi.map((kpi, idx) => {
-                        // Tarik data dinamis sesuai bulan ini
                         const targetBulanIni = kpi[`target_${bulanDb}`];
                         const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
 
@@ -239,14 +236,13 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
   );
 }
 
-// ── HALAMAN UTAMA REKAP ───────────────────────────────────────────
+// HALAMAN UTAMA REKAP
 export default function RekapPage() {
   const [data, setData]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [filterUnit, setFilterUnit] = useState('');
   
-  // State untuk menyimpan data KPI yang ingin ditampilkan di Modal
   const [selectedKpi, setSelectedKpi] = useState(null);
   
   useEffect(() => {

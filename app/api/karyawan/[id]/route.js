@@ -3,7 +3,6 @@ import db from '@/lib/db';
 
 export async function PUT(request, { params }) {
     try {
-        // PERUBAHAN UTAMA: Tambahkan 'await' sebelum params
         const { id } = await params; 
         
         const body = await request.json();

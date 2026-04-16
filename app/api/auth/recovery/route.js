@@ -37,7 +37,6 @@ export async function POST(request) {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         await connection.execute('UPDATE karyawan SET otp = ? WHERE email = ?', [otpCode, email]);
 
-        // --- KONFIGURASI NODEMAILER ---
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
@@ -46,7 +45,6 @@ export async function POST(request) {
           },
         });
 
-        // --- DESAIN EMAIL ---
         const mailOptions = {
           from: `"Kamus KPI" <${process.env.SMTP_EMAIL}>`,
           to: email,

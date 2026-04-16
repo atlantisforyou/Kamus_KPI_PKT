@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Editor } from '@tinymce/tinymce-react';
 
 const BSC = ['Financial', 'Customer', 'Internal Process', 'Learning & Growth'];
 const TIPE = ['Leading', 'Lagging'];
@@ -10,8 +11,6 @@ const FREKUENSI = ['Monthly', 'Quarterly', 'Half Yearly', 'Yearly'];
 const SATUAN = ['%', 'Rp', 'Unit', 'Orang', 'Hari', 'Jam', 'Kali', 'Dokumen', 'Lainnya'];
 const VALIDITAS = [{ v: 'Activity', l: 'Activity (0 - 100)' }, { v: 'Proxy', l: 'Proxy (100 - 105)' }, { v: 'Exact', l: 'Exact (105 - 110)' }];
 const BULAN = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'].map(k => ({ k, l: k.toUpperCase() }));
-
-// KOMPONEN UI GLOBAL
 
 const baseInput = { 
   width: '100%', padding: '10px 14px', border: '1.5px solid #e5eaf0', borderRadius: 8, 
@@ -143,6 +142,36 @@ export function AutocompleteSasaran({ value, onChange }) {
   );
 }
 
+export function RichTextEditor({ value, onChange, placeholder }) {
+  return (
+    <div style={{ border: '1.5px solid #e5eaf0', borderRadius: 8, overflow: 'hidden' }}>
+      <Editor
+        tinymceScriptSrc="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"
+        
+        licenseKey="gpl"
+        
+        value={value || ''}
+        onEditorChange={(content) => onChange({ target: { value: content } })}
+        init={{
+          height: 350,
+          menubar: 'file edit view insert format tools table help',
+          plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+          ],
+          toolbar: 'undo redo | blocks | ' +
+            'bold italic forecolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'table | removeformat | help',
+          content_style: 'body { font-family: "Plus Jakarta Sans", Helvetica, Arial, sans-serif; font-size:14px; }',
+          placeholder: placeholder || "Ketik teks, masukkan tabel, atau formula di sini..."
+        }}
+      />
+    </div>
+  );
+}
+
 // KOMPONEN AUTOCOMPLETE NAMA KPI KHUSUS (AUTO-FILL) DARI ACUAN VP
 export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
   const [query, setQuery] = useState(value || '');
@@ -240,7 +269,7 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
   );
 }
 
-// ─── 1. FORM INFORMASI DASAR ────────────────────────────────────────────
+// FORM INFORMASI DASAR
 export function InformasiDasarForm({ form, set, handleAutoFill }) {
   return (
     <SectionCard title="Informasi Dasar & Strategis">
@@ -269,7 +298,150 @@ export function InformasiDasarForm({ form, set, handleAutoFill }) {
   );
 }
 
-// ─── 2. FORM KARAKTERISTIK KPI ──────────────────────────────────────────
+// KOMPONEN FORMULA BUILDER BERBASIS BLOK/CHIP
+export function FormulaInput({ value, onChange, placeholder }) {
+  const [angka, setAngka] = useState('');
+
+  const tokens = value ? value.split(' ').filter(t => t.trim() !== '') : [];
+
+  const handleAdd = (token) => {
+    const newTokens = [...tokens, token];
+    onChange({ target: { value: newTokens.join(' ') } });
+  };
+
+  const handleRemove = (index) => {
+    const newTokens = tokens.filter((_, i) => i !== index);
+    onChange({ target: { value: newTokens.join(' ') } });
+  };
+
+  const handleAngkaSubmit = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (angka.trim()) {
+        handleAdd(angka.trim());
+        setAngka('');
+      }
+    } 
+    else if (e.key === 'Backspace' && angka === '' && tokens.length > 0) {
+      handleRemove(tokens.length - 1);
+    }
+  };
+
+  const isOperator = (t) => ['+', '-', '*', '/', '(', ')'].includes(t);
+  const isVariable = (t) => ['Aktual', 'Target', 'Bobot', 'Realisasi'].includes(t);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      
+      <div 
+        style={{
+          ...baseInput,
+          minHeight: '52px',
+          height: 'auto',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 12px'
+        }}
+        onClick={() => document.getElementById('formula-angka-input').focus()}
+      >
+        {tokens.length === 0 && !angka && (
+          <span style={{ color: '#9ca3af', fontSize: 14 }}>{placeholder || 'Mulai susun formula dari tombol di bawah...'}</span>
+        )}
+        
+        {tokens.map((token, idx) => (
+          <div
+            key={idx}
+            onClick={(e) => { e.stopPropagation(); handleRemove(idx); }}
+            title="Klik untuk menghapus"
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: isVariable(token) ? '#eff6ff' : isOperator(token) ? '#f3f4f6' : '#ecfdf5',
+              color: isVariable(token) ? '#3b7dd8' : isOperator(token) ? '#374151' : '#059669',
+              border: `1px solid ${isVariable(token) ? '#bfdbfe' : isOperator(token) ? '#d1d5db' : '#a7f3d0'}`,
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = 0.8}
+            onMouseOut={(e) => e.currentTarget.style.opacity = 1}
+          >
+            {token}
+            <span style={{ fontSize: '10px', opacity: 0.5 }}>✕</span>
+          </div>
+        ))}
+        
+        <input
+          id="formula-angka-input"
+          type="text"
+          value={angka}
+          onChange={(e) => setAngka(e.target.value)}
+          onKeyDown={handleAngkaSubmit}
+          placeholder={tokens.length > 0 ? "" : "atau ketik angka..."}
+          style={{
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            flex: 1,
+            minWidth: '100px',
+            fontSize: '14px',
+            color: '#000',
+            fontFamily: 'inherit'
+          }}
+        />
+      </div>
+
+      <div style={{ 
+        display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '12px', 
+        background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e5eaf0',
+        alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#7a8b9a', marginRight: 4 }}>Variabel:</span>
+          {['Aktual', 'Target', 'Bobot', 'Realisasi'].map(v => (
+            <button
+              key={v}
+              onClick={(e) => { e.preventDefault(); handleAdd(v); }}
+              style={{ padding: '6px 12px', background: '#eff6ff', color: '#3b7dd8', border: '1px solid #bfdbfe', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+            >{v}</button>
+          ))}
+        </div>
+
+        <div style={{ width: '1px', height: '20px', background: '#cbd5e1', margin: '0 4px' }} />
+
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#7a8b9a', marginRight: 4 }}>Operator:</span>
+          {['+', '-', '*', '/', '(', ')'].map(o => (
+            <button
+              key={o}
+              onClick={(e) => { e.preventDefault(); handleAdd(o); }}
+              style={{ padding: '6px 12px', background: '#fff', color: '#374151', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}
+            >{o}</button>
+          ))}
+        </div>
+        
+        <button
+          onClick={(e) => { e.preventDefault(); onChange({ target: { value: '' } }); setAngka(''); }}
+          style={{ padding: '6px 12px', background: '#fff5f5', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', marginLeft: 'auto' }}
+        >
+          Bersihkan
+        </button>
+      </div>
+
+      <p style={{fontSize: '12px', color: '#7a8b9a', marginTop: '-4px'}}>
+        *Klik tombol variabel/operator untuk menyusun formula. Ketik angka di dalam kotak lalu tekan <b>Enter</b> atau <b>Spasi</b>. Klik pada blok untuk menghapusnya.
+      </p>
+    </div>
+  );
+}
+
+// FORM KARAKTERISTIK KPI
 export function KarakteristikKPIForm({ form, set }) {
   return (
     <SectionCard title="Karakteristik KPI">
@@ -277,7 +449,11 @@ export function KarakteristikKPIForm({ form, set }) {
         <SelectInput value={form.tipe_kpi} onChange={set('tipe_kpi')} placeholder="Pilih Tipe..." options={TIPE} />
       </FieldRow>
       <FieldRow label="Formula Penilaian">
-        <TextArea value={form.formula_penilaian} onChange={set('formula_penilaian')} placeholder="Ketik formula penilaian di sini..." rows={3} />
+        <RichTextEditor 
+          value={form.formula_penilaian} 
+          onChange={set('formula_penilaian')} 
+          placeholder="Ketik formula penilaian, masukkan tabel, atau format teks di sini..." 
+        />
       </FieldRow>
       <FieldRow label="Jenis, Polaritas & Frekuensi">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
@@ -293,7 +469,7 @@ export function KarakteristikKPIForm({ form, set }) {
   );
 }
 
-// ─── 3. FORM TARGET & VALIDASI ──────────────────────────────────────────
+// FORM TARGET & VALIDASI
 export function TargetValidasiForm({ form, set }) {
   return (
     <SectionCard title="Target & Validasi">
