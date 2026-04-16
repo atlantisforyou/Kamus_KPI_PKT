@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import { InformasiDasarForm, KarakteristikKPIForm, TargetValidasiForm } from '@/components/ui/FormComponents';
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
@@ -126,7 +127,6 @@ export default function MonitoringPage() {
   const [load, setLoad]     = useState(true);
   const [filter, setFilter] = useState({ q: '', stat: '' });
   const [sel, setSel]       = useState(null);
-  const [toast, setToast]   = useState(null);
 
   // Form state
   const [form, setForm]               = useState(INIT_FORM);
@@ -135,8 +135,13 @@ export default function MonitoringPage() {
   const [successMsg, setSuccessMsg]   = useState('');
 
   const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    Swal.fire({
+      title: type === 'success' ? "Berhasil!" : "Gagal!",
+      text: msg,
+      icon: type === 'success' ? 'success' : 'error',
+      timer: 3000,
+      showConfirmButton: false
+    });
   };
 
   const fetchKamus = async () => {
@@ -152,7 +157,19 @@ export default function MonitoringPage() {
   useEffect(() => { if (view === 'list') fetchKamus(); }, [view]);
 
 const handleReview = async (id, nama) => {
-    if (!confirm(`Tandai KPI "${nama}" sebagai Reviewed dan teruskan ke manajemen?`)) return;
+    const confirmResult = await Swal.fire({
+      title: 'Konfirmasi Review',
+      text: `Tandai KPI "${nama}" sebagai Reviewed dan teruskan ke manajemen?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#2563eb',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Review',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
     try {
       const r = await fetch(`/api/kamus/${id}`, { 
         method: 'PATCH', 
@@ -170,23 +187,34 @@ const handleReview = async (id, nama) => {
   };
 
 const handleRevisi = async (id, nama) => {
-  if (!confirm(`Tandai KPI "${nama}" untuk direvisi?`)) return;
-  
-  try {
-    const r = await fetch(`/api/kamus/${id}/revisi`, { 
-      method: 'PATCH', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify({ status: 'revisi' }) 
+    const confirmResult = await Swal.fire({
+      title: 'Konfirmasi Revisi',
+      text: `Tandai KPI "${nama}" untuk direvisi?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Kembalikan',
+      cancelButtonText: 'Batal'
     });
+
+    if (!confirmResult.isConfirmed) return;
     
-    if (!r.ok) throw new Error();
-    
-    showToast(`KPI "${nama}" berhasil dikembalikan untuk revisi`);
-    fetchKamus();
-  } catch { 
-    showToast('Gagal memproses revisi KPI', 'error'); 
-  }
-};
+    try {
+      const r = await fetch(`/api/kamus/${id}/revisi`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ status: 'revisi' }) 
+      });
+      
+      if (!r.ok) throw new Error();
+      
+      showToast(`KPI "${nama}" berhasil dikembalikan untuk revisi`);
+      fetchKamus();
+    } catch { 
+      showToast('Gagal memproses revisi KPI', 'error'); 
+    }
+  };
 
   const setFormField = (key) => (e) => {
     const val = e.target ? e.target.value : e;
@@ -419,10 +447,6 @@ const handleRevisi = async (id, nama) => {
               onClick={() => handleSubmit('draft')} disabled={loadingForm}>
               Simpan Draft
             </button>
-            <button style={{ ...S.btn, background: '#1a2b4a', color: '#fff' }}
-              onClick={() => handleSubmit('menunggu_approval')} disabled={loadingForm}>
-              {loadingForm ? <><div className="spinner" /> Menyimpan...</> : '→ Submit ke Manajemen'}
-            </button>
           </div>
         </div>
       )}
@@ -432,7 +456,6 @@ const handleRevisi = async (id, nama) => {
         onClose={() => setSel(null)} 
         onReview={handleReview}
       />
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }

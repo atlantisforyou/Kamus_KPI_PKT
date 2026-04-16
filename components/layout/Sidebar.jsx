@@ -42,13 +42,13 @@ export default function Sidebar({ role, user, isOpen, isCollapsed, toggleCollaps
     'key_partner': [
       { href: '/key-partner', label: 'Dashboard', icon: 'home' }, 
       { href: '/key-partner/review', label: 'Review Kamus', icon: 'clipboard' }, 
-      { href: '/key-partner/kamus', label: 'Kamus KPI', icon: 'book' },
+      { href: '/key-partner/kamus', label: 'Katalog KPI', icon: 'book' },
       { href: '/key-partner/rekap', label: 'Rekap KPI', icon: 'list' }
     ],
     admin: [
       { href: '/admin', label: 'Dashboard', icon: 'home' }, 
       { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: 'users' }, 
-      { href: '/admin/monitoring', label: 'Monitoring', icon: 'bar-chart' },
+      { href: '/admin/monitoring', label: 'Katalog KPI', icon: 'book' },
       { href: '/admin/rekap', label: 'Progress KPI', icon: 'list' }
     ],
     manajemen: [

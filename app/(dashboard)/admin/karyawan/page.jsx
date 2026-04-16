@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Swal from 'sweetalert2';
 
 const ROLE_OPTS = [
   { value: 'user', label: 'User' }, 
@@ -191,10 +192,18 @@ export default function KelolKaryawanPage() {
   const [data, setData]       = useState({ list: [], load: true });
   const [filters, setFilters] = useState({ search: '', role: '', mode: 'group', page: 1 });
   
-  const [ui, setUi]           = useState({ col: {}, up: null, toast: null, modalTambah: false, modalImport: false });
+  const [ui, setUi]           = useState({ col: {}, up: null, modalTambah: false, modalImport: false });
   const PER_PAGE = 20;
 
-  const showToast = (msg, type = 'success') => { setUi(p => ({ ...p, toast: { msg, type } })); setTimeout(() => setUi(p => ({ ...p, toast: null })), 3500); };
+  const showToast = (msg, type = 'success') => { 
+    Swal.fire({
+      title: type === 'success' ? "Berhasil!" : "Gagal!",
+      text: msg,
+      icon: type === 'success' ? 'success' : 'error',
+      timer: 3000,
+      showConfirmButton: false
+    });
+  };
   
   const fetchAPI = async () => {
     setData(p => ({ ...p, load: true }));
@@ -482,7 +491,6 @@ filters.mode === 'group' ? (
       {ui.modalTambah && <TambahModal onClose={() => setUi(p => ({ ...p, modalTambah: false }))} onSuccess={(m) => { setUi(p => ({ ...p, modalTambah: false })); showToast(m); fetchAPI(); }} />}
       {ui.modalImport && <ImportModal onClose={() => setUi(p => ({ ...p, modalImport: false }))} onSuccess={(m) => { setUi(p => ({ ...p, modalImport: false })); showToast(m); fetchAPI(); }} />}
       
-      {ui.toast && <div className={`toast ${ui.toast.type}`}>{ui.toast.msg}</div>}
     </>
   );
 }

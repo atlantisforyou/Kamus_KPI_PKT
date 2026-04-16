@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
@@ -30,7 +31,18 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
   const [loadingApprove, setLoadingApprove] = useState(false);
 
   const handleBypassApprove = async () => {
-    if (!confirm('Bypass Admin: Yakin ingin menyetujui KPI ini?')) return;
+    const confirmResult = await Swal.fire({
+      title: 'Bypass Admin',
+      text: 'Yakin ingin menyetujui KPI ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Setujui!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!confirmResult.isConfirmed) return;
     setLoadingApprove(true);
     try {
       const r = await fetch(`/api/kamus/${kpi.id}`, {
@@ -40,12 +52,21 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      
-      alert('KPI berhasil disetujui oleh Admin!');
+
+      Swal.fire({
+        title: "Berhasil!",
+        text: "KPI berhasil disetujui oleh Admin!",
+        icon: "success"
+      });
+
       onRefresh();
       onClose();
     } catch (e) {
-      alert(e.message || 'Terjadi kesalahan');
+      Swal.fire({
+        title: "Gagal!",
+        text: e.message || 'Terjadi kesalahan',
+        icon: "error"
+      });
     } finally {
       setLoadingApprove(false);
     }
@@ -131,8 +152,14 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
 function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
   const [open, setOpen] = useState(defaultOpen);
 
+  const isEmployeeMatch = search && (
+    karyawan.nama?.toLowerCase().includes(search.toLowerCase()) ||
+    karyawan.npk?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const filteredKpi = karyawan.kpi?.filter(k =>
     !search ||
+    isEmployeeMatch ||
     k.nama_kpi?.toLowerCase().includes(search.toLowerCase()) ||
     k.perspektif_bsc?.toLowerCase().includes(search.toLowerCase()) ||
     k.sasaran_strategis?.toLowerCase().includes(search.toLowerCase())
@@ -428,23 +455,6 @@ export default function RekapPage() {
                 <select className="filter-select" value={filterUnit} onChange={e => setFilterUnit(e.target.value)}>
                   <option value="">Semua</option>
                   {units.map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
-              <div className="filter-item">
-                Periode: 
-                <select className="filter-select">
-                  <option>Q4</option>
-                  <option>Q3</option>
-                  <option>Q2</option>
-                  <option>Q1</option>
-                </select>
-              </div>
-              <div className="filter-item">
-                Status: 
-                <select className="filter-select">
-                  <option>Semua</option>
-                  <option>Tercapai</option>
-                  <option>On Progress</option>
                 </select>
               </div>
             </div>
