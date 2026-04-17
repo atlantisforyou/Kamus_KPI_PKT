@@ -116,15 +116,15 @@ export function AutocompleteSasaran({ value, onChange }) {
       {loading && <div style={{ position: 'absolute', right: 14, top: 12, fontSize: 12, color: '#7a8b9a' }}>Mencari...</div>}
 
       {bukaDropdown && pilihan.length > 0 && (
-        <ul style={{
-          position: 'absolute', zIndex: 50, width: '100%', background: '#fff', 
-          border: '1.5px solid #e5eaf0', borderRadius: 8, marginTop: 4,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 250, overflowY: 'auto',
-          listStyle: 'none', padding: 0
-        }}>
-          {pilihan.map((item) => (
+      <ul style={{
+            position: 'absolute', zIndex: 50, width: '100%', background: '#fff', 
+            border: '1.5px solid #e5eaf0', borderRadius: 8, marginTop: 4,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 250, overflowY: 'auto',
+            listStyle: 'none', padding: 0
+          }}>
+          {pilihan.map((item, index) => (
             <li 
-              key={item.id} 
+              key={item.id ? item.id : `sasaran-${index}`} 
               onMouseDown={() => handlePilih(item.sasaran)}
               style={{ padding: '10px 14px', borderBottom: '1px solid #f0f4f8', cursor: 'pointer', fontSize: 13 }}
               onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}

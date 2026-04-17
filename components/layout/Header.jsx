@@ -7,7 +7,7 @@ import { Icon, ROLE_LABEL } from './Sidebar';
 const LABELS = {
   '/user': 'Dashboard', '/user/kamus': 'Kamus KPI Saya', '/user/rekap': 'Monitoring KPI Saya',
   '/key-partner': 'Dashboard', '/key-partner/review': 'Review Kamus',
-  '/admin': 'Dashboard', '/admin/rekap': 'Monitoring Kamus KPI', '/admin/karyawan': 'Kelola Karyawan', '/admin/monitoring': 'Monitoring',
+  '/admin': 'Dashboard', '/admin/rekap': 'Monitoring Kamus KPI', '/admin/karyawan': 'Kelola Karyawan', '/admin/monitoring': 'Katalog',
   '/manajemen': 'Dashboard', '/manajemen/approval': 'Approval Kamus',
 };
 
@@ -41,7 +41,6 @@ export default function Header({ onLogout, loggingOut }) {
     return (
     <>
       <style>{`
-        /* ... (CSS Anda tetap sama) ... */
         .topbar-modern {
           display: flex; justify-content: space-between; align-items: center;
           height: 70px; background: #ffffff; padding: 0 24px;

@@ -68,7 +68,6 @@ function DetailModal({ k, onClose, onReview }) {
             <DRow l="Sasaran Strategis" v={k.sasaran_strategis} />
             <DRow l="Definisi KPI" v={k.definisi_kpi} />
             <DRow l="Tujuan KPI" v={k.tujuan_kpi} />
-            <DRow l="Dibuat Oleh" v={`${k.pembuat_nama} — ${k.pembuat_unit}`} />
           </div>
           
           <div className="detail-section">
@@ -262,7 +261,18 @@ const handleRevisi = async (id, nama) => {
       k.perspektif_bsc?.toLowerCase().includes(filter.q.toLowerCase()))
   );
 
-  const formatTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+  const formatTgl = (d) => {
+    if (!d) return '-';
+    const date = new Date(d);
+    return date.toLocaleString('id-ID', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    }).replace(/\./g, ':');
+  };
 
   const S = {
     btn:    { padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: 'Plus Jakarta Sans,sans-serif', cursor: 'pointer', border: 'none', transition: 'all .2s', display: 'inline-flex', alignItems: 'center', gap: 8 },
@@ -325,7 +335,7 @@ const handleRevisi = async (id, nama) => {
         <div>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a2b4a', marginBottom: 6 }}>Monitoring Kamus KPI</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a2b4a', marginBottom: 6 }}>Katalog Kamus KPI</h1>
               <p style={{ fontSize: 14, color: '#7a8b9a' }}>Pantau status seluruh pengajuan Kamus KPI dari semua karyawan.</p>
             </div>
             <button style={{ ...S.btn, background: '#1a2b4a', color: '#fff' }}
@@ -362,7 +372,7 @@ const handleRevisi = async (id, nama) => {
                 <thead>
                   <tr>
                     <th>#</th><th>Nama KPI</th><th>Perspektif BSC</th>
-                    <th>Dibuat Oleh</th><th>Tanggal</th><th>Status</th><th>Aksi</th>
+                    <th>TimeStamp</th><th>Status</th><th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -374,11 +384,9 @@ const handleRevisi = async (id, nama) => {
                         {k.sasaran_strategis && <div style={{ fontSize: 12, color: '#7a8b9a', marginTop: 2 }}>{k.sasaran_strategis.substring(0, 60)}{k.sasaran_strategis.length > 60 ? '...' : ''}</div>}
                       </td>
                       <td style={{ fontSize: 13, color: '#7a8b9a' }}>{k.perspektif_bsc || '-'}</td>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{k.pembuat_nama || '-'}</div>
-                        <div style={{ fontSize: 12, color: '#7a8b9a' }}>{k.pembuat_unit || '-'}</div>
-                      </td>
+                      
                       <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{formatTgl(k.created_at)}</td>
+                      
                       <td><StatBadge s={k.status} /></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>

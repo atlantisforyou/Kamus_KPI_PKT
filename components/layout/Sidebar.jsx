@@ -47,9 +47,9 @@ export default function Sidebar({ role, user, isOpen, isCollapsed, toggleCollaps
     ],
     admin: [
       { href: '/admin', label: 'Dashboard', icon: 'home' }, 
-      { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: 'users' }, 
-      { href: '/admin/monitoring', label: 'Katalog KPI', icon: 'book' },
-      { href: '/admin/rekap', label: 'Progress KPI', icon: 'list' }
+      { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: 'users' },
+      { href: '/admin/rekap', label: 'Progress KPI', icon: 'list' },
+      { href: '/admin/monitoring', label: 'Katalog KPI', icon: 'book' }
     ],
     manajemen: [
       { href: '/manajemen', label: 'Dashboard', icon: 'home' },

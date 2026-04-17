@@ -2,9 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+// Import form komponen untuk fitur Edit/Revisi
+import { InformasiDasarForm, KarakteristikKPIForm, TargetValidasiForm } from '@/components/ui/FormComponents';
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+
+const INIT_FORM = {
+  perspektif_bsc: '', sasaran_strategis: '', nama_kpi: '',
+  definisi_kpi: '', tujuan_kpi: '', tipe_kpi: '', formula_penilaian: '', jenis_pengukuran: '',
+  polaritas: '', frekuensi: '', target_jan: '', target_feb: '', target_mar: '', target_apr: '',
+  target_mei: '', target_jun: '', target_jul: '', target_agt: '', target_sep: '', target_okt: '',
+  target_nov: '', target_des: '', target_tahunan: '', sumber_data: '', satuan: '',
+  validitas: '', nilai_maksimum: '',
+};
 
 const STATUS_CONFIG = {
   draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
@@ -15,7 +26,8 @@ const STATUS_CONFIG = {
 
 const Ico = {
   Close:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  Detail: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+  Detail: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+  Revisi: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
 };
 
 function StatusBadge({ status, customLabel }) {
@@ -27,6 +39,7 @@ function StatusBadge({ status, customLabel }) {
   );
 }
 
+// MODAL DETAIL KPI (Read-Only)
 function KpiDetailModal({ kpi, onClose, onRefresh }) {
   const [loadingApprove, setLoadingApprove] = useState(false);
 
@@ -53,20 +66,11 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
 
-      Swal.fire({
-        title: "Berhasil!",
-        text: "KPI berhasil disetujui oleh Admin!",
-        icon: "success"
-      });
-
+      Swal.fire({ title: "Berhasil!", text: "KPI berhasil disetujui oleh Admin!", icon: "success" });
       onRefresh();
       onClose();
     } catch (e) {
-      Swal.fire({
-        title: "Gagal!",
-        text: e.message || 'Terjadi kesalahan',
-        icon: "error"
-      });
+      Swal.fire({ title: "Gagal!", text: e.message || 'Terjadi kesalahan', icon: "error" });
     } finally {
       setLoadingApprove(false);
     }
@@ -132,12 +136,7 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
         
         <div className="modal-actions">
           {kpi.status !== 'approved' && (
-            <button 
-              className="btn-modal" 
-              style={{ background: '#16a34a', color: '#fff', border: 'none' }} 
-              onClick={handleBypassApprove}
-              disabled={loadingApprove}
-            >
+            <button className="btn-modal" style={{ background: '#16a34a', color: '#fff', border: 'none' }} onClick={handleBypassApprove} disabled={loadingApprove}>
               {loadingApprove ? 'Memproses...' : 'Approve KPI'}
             </button>
           )}
@@ -149,7 +148,7 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
 }
 
 // KOMPONEN KARTU KARYAWAN
-function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
+function KaryawanCard({ karyawan, defaultOpen = false, search, roleUser, onOpenModal, onRevisi }) {
   const [open, setOpen] = useState(defaultOpen);
 
   const isEmployeeMatch = search && (
@@ -165,19 +164,15 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
     k.sasaran_strategis?.toLowerCase().includes(search.toLowerCase())
   ) || [];
 
-  const totalKpi = karyawan.kpi?.length || 0;
-  const approvedKpi = karyawan.kpi?.filter(k => k.status === 'approved').length || 0;
-  const progressPct = totalKpi === 0 ? 0 : Math.round((approvedKpi / totalKpi) * 100);
-  
-  let evalStatus = progressPct >= 100 ? 'Melampaui Target' : progressPct > 0 ? 'On Progress' : 'Belum Ada';
-  let evalBg = progressPct >= 100 ? '#dcfce7' : progressPct > 0 ? '#fef3c7' : '#f1f5f9';
-  let evalColor = progressPct >= 100 ? '#16a34a' : progressPct > 0 ? '#d97706' : '#64748b';
+  const pct = karyawan.progressPct || 0;
+  let evalStatus = pct >= 100 ? 'Melampaui Target' : pct > 0 ? 'On Progress' : 'Belum Ada';
+  let evalBg = pct >= 100 ? '#dcfce7' : pct > 0 ? '#fef3c7' : '#f1f5f9';
+  let evalColor = pct >= 100 ? '#16a34a' : pct > 0 ? '#d97706' : '#64748b';
 
   const displayDept = karyawan.nama_dept || karyawan.unit_kerja || '-';
 
   return (
     <div className={`employee-card ${open ? 'expanded' : ''}`}>
-
       <div className="employee-header" onClick={() => setOpen(o => !o)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
           <div className={`chevron-icon ${open ? 'open' : ''}`}>
@@ -186,21 +181,14 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
           <div className="avatar">{karyawan.nama?.charAt(0).toUpperCase()}</div>
           <div style={{ minWidth: '200px' }}>
             <div className="emp-name">{karyawan.nama}</div>
-            <div className="emp-role">{karyawan.npk || 'Staff'}</div>
+            <div className="emp-role">NPK: {karyawan.npk || '-'} | {displayDept}</div>
           </div>
         </div>
 
-        <div className="emp-dept">{displayDept}</div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, justifyContent: 'flex-end' }}>
-          <div className="emp-score-text">
-            Progress KPI: <span style={{ color: progressPct === 100 ? '#16a34a' : '#1e293b' }}>{progressPct}%</span>
-
-            {progressPct < 100 && (
-              <div style={{ width: '100%', height: '4px', background: '#e2e8f0', borderRadius: '4px', marginTop: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${progressPct}%`, height: '100%', background: '#f59e0b', borderRadius: '4px' }} />
-              </div>
-            )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', justifyContent: 'flex-end' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Capaian Kinerja Tahunan</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: evalColor }}>{pct.toFixed(1)}%</div>
           </div>
           <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: evalBg, color: evalColor, whiteSpace: 'nowrap' }}>
             {evalStatus}
@@ -210,89 +198,72 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
 
       {open && (
         <div className="employee-detail">
-          <div className="detail-title">DETAIL KPI INDIVIDU</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+             <div className="detail-title">DAFTAR KPI & TARGET TAHUNAN</div>
+             <div style={{ display: 'flex', gap: 10 }}>
+               {karyawan.kpi?.length > 0 && (
+                  <button onClick={(e) => { e.stopPropagation(); window.open(`/api/rekap/${karyawan.id}/export`, '_blank'); }} className="btn-export">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download Format Penilaian SKT
+                  </button>
+               )}
+             </div>
+          </div>
           
           {filteredKpi.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '13px' }}>Tidak ada KPI.</div>
+            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: '13px' }}>Belum ada kamus KPI yang disetujui.</div>
           ) : (
           <div className="table-responsive">
+              <table className="kpi-table">
+                <thead>
+                  <tr>
+                    <th width="5%">No</th>
+                    <th width="30%">KPI & Sasaran</th>
+                    <th width="10%">Satuan</th>
+                    <th width="15%">Target Tahunan</th>
+                    <th width="10%">Target Bulan Ini</th>
+                    <th width="10%">Bobot</th>
+                    <th width="10%">Status</th>
+                    <th width="10%">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredKpi.map((kpi, idx) => {
+                     const bulanKe = new Date().getMonth(); 
+                     const targetSdSekarang = kpi[`target_${BULAN[bulanKe]}`] || '-';
 
-              {(() => {
-                const indexBulanIni = new Date().getMonth();
-                const bulanDb = BULAN[indexBulanIni];
-                const labelBulan = B_LBL[indexBulanIni];
-
-                return (
-                  <table className="kpi-table">
-                    <thead>
-                      <tr>
-                        <th width="5%">No</th>
-                        <th width="30%">Detail KPI</th>
-                        <th width="15%">Polaritas</th>
-                        <th width="15%">Target Total</th>
-
-                        <th width="10%">Target s.d {labelBulan}</th>
-                        <th width="15%">Realisasi s.d {labelBulan}</th>
-                        <th width="10%">Aksi</th>
+                     return (
+                      <tr key={kpi.id || idx}>
+                        <td style={{ fontWeight: 600, color: '#64748b' }}>{idx + 1}</td>
+                        <td>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</div>
+                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{kpi.sasaran_strategis || '-'}</div>
+                        </td>
+                        <td>{kpi.satuan || '-'}</td>
+                        <td style={{ fontWeight: 700, color: '#1a2b4a' }}>{kpi.target_tahunan || '-'}</td>
+                        <td>{targetSdSekarang}</td>
+                        <td>{kpi.bobot ? `${kpi.bobot}%` : '0%'}</td>
+                        <td><StatusBadge status={kpi.status} /></td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                             <button className="btn-detail" onClick={() => onOpenModal(kpi)}>
+                               {Ico.Detail} Detail
+                             </button>
+                             <button className="btn-revisi" onClick={() => onRevisi(kpi)}>
+                               {Ico.Revisi} Revisi
+                             </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredKpi.map((kpi, idx) => {
-
-                        const targetBulanIni = kpi[`target_${bulanDb}`];
-                        const realisasiBulanIni = kpi[`realisasi_${bulanDb}`];
-
-                        return (
-                          <tr key={kpi.id || idx}>
-                            <td style={{ fontWeight: 600, color: '#64748b' }}>{idx + 1}</td>
-                            <td style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</td>
-                            <td>{kpi.polaritas || '-'}</td>
-                            
-                            <td style={{ fontWeight: 600 }}>
-                              {kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || ''}` : '-'}
-                            </td>
-                            
-                            <td>
-                              {targetBulanIni ? `${targetBulanIni} ${kpi.satuan || ''}` : '-'}
-                            </td>
-                            
-                            <td>
-                              {realisasiBulanIni ? `${realisasiBulanIni} ${kpi.satuan || ''}` : '-'}
-                            </td>
-                            
-                            <td>
-                              <button 
-                                className="btn-detail"
-                                onClick={() => onOpenModal(kpi)}
-                              >
-                                {Ico.Detail} Detail
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                );
-              })()}
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
-
-          <div className="eval-footer">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>Total Progress KPI: <span style={{ color: '#16a34a' }}>{progressPct}%</span></span>
-              <div style={{ width: '150px', height: '6px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${progressPct}%`, height: '100%', background: '#16a34a', borderRadius: '4px' }} />
-              </div>
-            </div>
-            <div style={{ fontSize: '13px', color: '#475569' }}>
-              <span style={{ fontWeight: 700, color: '#0f172a' }}>Evaluasi Akhir:</span> <span style={{ color: evalColor }}>{evalStatus}.</span> 
-              <span style={{ marginLeft: '6px' }}>Berdasarkan persetujuan atasan.</span>
-            </div>
-          </div>
         </div>
       )}
-    </div>
+  </div>
   );
 }
 
@@ -303,14 +274,79 @@ export default function RekapPage() {
   const [search, setSearch]   = useState('');
   const [filterUnit, setFilterUnit] = useState('');
   
-  const [selectedKpi, setSelectedKpi] = useState(null);
+  const [selectedKpi, setSelectedKpi] = useState(null); // Untuk Modal Detail
+  const [editKpi, setEditKpi] = useState(null);         // Untuk Modal Revisi (Edit)
+  const [roleUser, setRoleUser] = useState('');
+
+  // State untuk form Revisi/Edit
+  const [form, setForm] = useState(INIT_FORM);
+  const [loadingForm, setLoadingForm] = useState(false);
   
-  useEffect(() => {
+  const loadData = () => {
     fetch('/api/rekap')
       .then(r => r.json())
       .then(d => setData(d.data || []))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => setRoleUser(d.user?.role || 'user'))
+      .catch(() => {});
+
+    loadData();
   }, []);
+
+  // Handler Update State Form
+  const setFormField = (key) => (e) => {
+    const val = e.target ? e.target.value : e;
+    setForm(prev => {
+      const updated = { ...prev, [key]: val };
+      // Hitung otomatis Target Tahunan jika target bulan diedit
+      if (key.startsWith('target_') && key !== 'target_tahunan') {
+        const total = BULAN.reduce((sum, b) => {
+          const v = parseFloat(b === key.replace('target_', '') ? val : updated[`target_${b}`]) || 0;
+          return sum + v;
+        }, 0);
+        updated.target_tahunan = total > 0 ? total.toFixed(2) : '';
+      }
+      return updated;
+    });
+  };
+
+  // KETIKA TOMBOL REVISI DIKLIK
+  const handleRevisiClick = (kpi) => {
+    // Isi data lama ke dalam state form
+    setForm({ ...INIT_FORM, ...kpi });
+    setEditKpi(kpi); // Buka modal Edit/Revisi
+  };
+
+  // KETIKA TOMBOL SIMPAN DI MODAL REVISI DIKLIK
+  const submitRevisi = async () => {
+    if (!form.nama_kpi.trim()) return Swal.fire("Peringatan", "Nama KPI wajib diisi!", "warning");
+
+    setLoadingForm(true);
+    try {
+      // Endpoint PATCH ke ID kpi untuk update isi dari form
+      const r = await fetch(`/api/kamus/${editKpi.id}`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(form) // Mengirimkan semua data form yang diedit
+      });
+      
+      if (!r.ok) throw new Error();
+      
+      Swal.fire({ title: "Berhasil!", text: `KPI "${form.nama_kpi}" berhasil direvisi.`, icon: "success" });
+      
+      setEditKpi(null); // Tutup Modal Edit
+      loadData();       // Refresh tabel
+    } catch { 
+      Swal.fire({ title: "Gagal!", text: 'Terjadi kesalahan saat menyimpan perubahan.', icon: "error" });
+    } finally {
+      setLoadingForm(false);
+    }
+  };
 
   const units = [...new Set(data.map(k => k.nama_dept || k.unit_kerja).filter(Boolean))].sort();
 
@@ -355,57 +391,45 @@ export default function RekapPage() {
         .employee-card.expanded { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); }
         
         /* Employee Header */
-        .employee-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; cursor: pointer; background: #fff; transition: background 0.2s; }
+        .employee-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; background: #fff; transition: background 0.2s; }
         .employee-card.expanded .employee-header { background: #eff6ff; border-bottom: 1px solid #bfdbfe; }
         .employee-header:hover { background: #f8fafc; }
         
         .chevron-icon { color: #64748b; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
         .chevron-icon.open { transform: rotate(180deg); color: #3b82f6; }
         
-        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #94a3b8; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; flex-shrink: 0; }
-        .employee-card.expanded .avatar { background: #3b82f6; } 
+        .avatar { width: 42px; height: 42px; border-radius: 50%; background: #0f4b8f; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; flex-shrink: 0; }
         
-        .emp-name { font-size: 14px; font-weight: 700; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; }
+        .emp-name { font-size: 15px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; }
         .emp-role { font-size: 12px; color: #64748b; }
-        .emp-dept { font-size: 13px; color: #334155; font-weight: 500; flex: 1; text-align: center; }
-        .emp-score-text { font-size: 13px; font-weight: 700; color: #334155; display: flex; flex-direction: column; align-items: flex-end; }
 
-        .employee-detail { padding: 20px; background: #fff; }
-        .detail-title { font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 12px; letter-spacing: 0.5px; }
+        /* Detail Section */
+        .employee-detail { padding: 24px; background: #fff; }
+        .detail-title { font-size: 13px; font-weight: 800; color: #0f4b8f; margin-bottom: 0px; letter-spacing: 0.5px; }
+        
+        /* Buttons inside table */
+        .btn-export { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #1a2b4a; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .btn-export:hover { background: #0f172a; }
         
         .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         .kpi-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .kpi-table th { background: #f8fafc; padding: 12px 16px; font-size: 12px; font-weight: 700; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .kpi-table th { background: #f8fafc; padding: 14px 16px; font-size: 12px; font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
         .kpi-table td { padding: 14px 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .kpi-table tr:last-child td { border-bottom: none; }
         
-        .btn-detail {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: #eff6ff;
-          color: #3b82f6;
-          border: 1px solid #bfdbfe;
-          border-radius: 6px;
-          font-size: 12px;
-          font-family: inherit;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .btn-detail:hover {
-          background: #dbeafe;
-          color: #2563eb;
-        }
+        .btn-detail { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 12px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-detail:hover { background: #dbeafe; color: #2563eb; }
 
-        .eval-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap; gap: 12px; }
+        /* Style Tombol Revisi */
+        .btn-revisi { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; font-size: 12px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-revisi:hover { background: #fee2e2; color: #b91c1c; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
-        .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .2s ease; }
+        /* Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; overflow-y: auto; }
+        .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 960px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .2s ease; position: relative; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 10; }
         .modal-header h3 { font-size: 16px; font-weight: 700; color: #1a2b4a; margin: 0; }
         .modal-close { width: 32px; height: 32px; border-radius: 8px; background: #f4f6f9; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
         .modal-close:hover { background: #e8edf2; }
@@ -423,24 +447,24 @@ export default function RekapPage() {
         .target-cell-sm .t-target, .target-cell-sm .t-real { font-size: 12px; font-weight: 600; color: #374151; display: flex; justify-content: space-between; }
         .target-cell-sm .t-real { color: #2563eb; }
         
-        .modal-actions { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; }
+        .modal-actions { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; z-index: 10; }
         .btn-modal { padding: 10px 20px; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; transition: all .15s; }
         .btn-cancel { background: #f4f6f9; color: #374151; }
         .btn-cancel:hover { background: #e8edf2; }
+        .btn-save { background: #2563eb; color: white; }
+        .btn-save:hover { background: #1d4ed8; }
 
         @media (max-width: 768px) {
           .toolbar { flex-direction: column; align-items: stretch; }
           .filter-group, .search-wrapper { justify-content: space-between; width: 100%; }
           .search-box { width: 100%; }
-          .emp-dept { display: none; }
-          .eval-footer { flex-direction: column; align-items: flex-start; }
           .target-grid-sm { grid-template-columns: repeat(3, 1fr); }
         }
       `}</style>
 
       <div className="page-container">
         <div className="header-top">
-          <h1 className="header-title">Rekapitulasi Pencapaian KPI Karyawan 2024</h1>
+          <h1 className="header-title">Monitoring dan Rekap Kinerja Berdasarkan Sasaran & Indikator (KPI)</h1>
         </div>
 
         <div className="main-card">
@@ -448,7 +472,7 @@ export default function RekapPage() {
           <div className="toolbar">
             <div className="filter-group">
               <div className="filter-item">
-                Departemen: 
+                Unit Kerja: 
                 <select className="filter-select" value={filterUnit} onChange={e => setFilterUnit(e.target.value)}>
                   <option value="">Semua</option>
                   {units.map(u => <option key={u} value={u}>{u}</option>)}
@@ -459,7 +483,7 @@ export default function RekapPage() {
             <div className="search-wrapper">
               <div className="search-box">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+                <input placeholder="Cari nama karyawan / NPK..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
             </div>
           </div>
@@ -478,7 +502,9 @@ export default function RekapPage() {
                   key={k.id} 
                   karyawan={k} 
                   search={search} 
-                  onOpenModal={setSelectedKpi}
+                  roleUser={roleUser}
+                  onOpenModal={setSelectedKpi}    // Buka Modal Detail
+                  onRevisi={handleRevisiClick}    // Buka Modal Revisi (Edit)
                 />
               ))}
             </div>
@@ -487,15 +513,45 @@ export default function RekapPage() {
         </div>
       </div>
 
+      {/* --- MODAL DETAIL (READ-ONLY) --- */}
       <KpiDetailModal 
         kpi={selectedKpi} 
         onClose={() => setSelectedKpi(null)} 
-        onRefresh={() => {
-          fetch('/api/rekap')
-            .then(r => r.json())
-            .then(d => setData(d.data || []));
-        }}
+        onRefresh={loadData}
       />
+
+      {/* --- MODAL REVISI (EDIT KPI) --- */}
+      {editKpi && (
+        <div className="modal-overlay" onClick={() => setEditKpi(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Revisi (Edit) Data KPI</h3>
+              <button className="modal-close" onClick={() => setEditKpi(null)}>{Ico.Close}</button>
+            </div>
+            
+            <div className="modal-body" style={{ background: '#f4f8fc', padding: '24px' }}>
+              <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>
+                    Silakan ubah rincian KPI Karyawan di bawah ini secara langsung.
+                 </p>
+                 {/* Re-use FormComponents yang diimport di atas */}
+                 <InformasiDasarForm   form={form} set={setFormField} />
+                 <KarakteristikKPIForm form={form} set={setFormField} />
+                 <TargetValidasiForm   form={form} set={setFormField} />
+              </div>
+            </div>
+            
+            <div className="modal-actions">
+              <button className="btn-modal btn-cancel" onClick={() => setEditKpi(null)} disabled={loadingForm}>
+                Batal
+              </button>
+              <button className="btn-modal btn-save" onClick={submitRevisi} disabled={loadingForm}>
+                {loadingForm ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

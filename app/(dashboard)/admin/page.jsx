@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import StatCard from '@/components/ui/StatCard';
 
 const Skel = ({ w = '100%', h = '14px', r = '6px' }) => <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />;
@@ -27,6 +26,7 @@ const NOTIF_STYLE = {
 
 export default function AdminDashboard() {
   const [data, setData] = useState({ stat: null, bsc: [], notices: [], load: true });
+  const [showModalNotif, setShowModalNotif] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
 
         const kar = rKar && rKar.ok ? ((await rKar.json()).data || []) : [];
         const kam = rKam && rKam.ok ? ((await rKam.json()).data || []) : [];
-        const notices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []).slice(0, 5) : [];
+        const allNotices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []) : [];
         
         const count = (s) => kam.filter(k => k.status === s).length;
         const bscCats = ['Financial', 'Customer', 'Internal Business Process', 'Learning & Growth'];
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
             const app = inCat.filter(k => k.status === 'approved').length;
             return { l: c, tot: inCat.length, app, pct: inCat.length ? Math.round((app / inCat.length) * 100) : 0 };
           }),
-          notices: notices,
+          notices: allNotices,
           load: false
         });
       } catch { setData(p => ({ ...p, load: false })); }
@@ -74,9 +74,17 @@ export default function AdminDashboard() {
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
         .section-card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 1px 8px rgba(0,0,0,.06); }
-        .view-all-link { font-size:13px; color:#3b7dd8; font-weight:600; text-decoration:none; }
+        .view-all-link { font-size:13px; color:#3b7dd8; font-weight:600; text-decoration:none; background:transparent; border:none; cursor:pointer; padding:0; font-family:inherit; }
         .view-all-link:hover { opacity:0.8; }
         @media (max-width: 768px){ .bottom-grid { grid-template-columns:1fr !important; } }
+        
+        /* Modal Styles */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; display:flex; justify-content:center; align-items:center; padding:20px; animation: fadeIn 0.2s ease; }
+        .modal-content { background:#fff; width:100%; max-width:600px; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.15); display:flex; flex-direction:column; animation: slideUp 0.3s ease; }
+        .modal-header { padding:20px 24px; border-bottom:1px solid #f0f4f8; display:flex; justify-content:space-between; align-items:center; }
+        .modal-body { padding:24px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
       `}</style>
       
       <div>
@@ -102,7 +110,7 @@ export default function AdminDashboard() {
           <div className="section-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Notice board</h2>
-              <Link href="/admin/notice" className="view-all-link">View all &rarr;</Link>
+              <button onClick={() => setShowModalNotif(true)} className="view-all-link">View all &rarr;</button>
             </div>
             
             <div style={{ borderTop: '1px solid #f0f4f8', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -111,7 +119,7 @@ export default function AdminDashboard() {
               ) : notices.length === 0 ? (
                 <div style={{ fontSize: 13, color: '#7a8b9a', textAlign: 'center', padding: '20px 0' }}>Belum ada pemberitahuan.</div>
               ) : (
-                notices.map((n) => {
+                notices.slice(0, 5).map((n) => {
                   const style = NOTIF_STYLE[n.tipe] || NOTIF_STYLE.info;
                   return (
                     <div key={n.id} style={{ padding: '14px', background: style.bg, borderRadius: 8, borderLeft: `3px solid ${style.border}` }}>
@@ -128,6 +136,41 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {showModalNotif && (
+        <div className="modal-overlay" onClick={() => setShowModalNotif(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Semua Pemberitahuan</h2>
+              <button 
+                onClick={() => setShowModalNotif(false)} 
+                style={{ background: '#f4f6f9', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {notices.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Tidak ada pemberitahuan.</div>
+              ) : (
+                notices.map((n) => {
+                  const style = NOTIF_STYLE[n.tipe] || NOTIF_STYLE.info;
+                  return (
+                    <div key={`modal-${n.id}`} style={{ padding: '16px', background: style.bg, borderRadius: 10, borderLeft: `4px solid ${style.border}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a2b4a' }}>{n.judul}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap', marginLeft: 12 }}>{n.waktu_teks}</div>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>{n.pesan}</div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

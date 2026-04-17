@@ -220,19 +220,47 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
 
           <div className="eval-footer">
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>Total Progress KPI: <span style={{ color: '#16a34a' }}>{progressPct}%</span></span>
+              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>
+                Total Progress KPI: <span style={{ color: '#16a34a' }}>{progressPct}%</span>
+              </span>
               <div style={{ width: '150px', height: '6px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: `${progressPct}%`, height: '100%', background: '#16a34a', borderRadius: '4px' }} />
               </div>
             </div>
-            <div style={{ fontSize: '13px', color: '#475569' }}>
-              <span style={{ fontWeight: 700, color: '#0f172a' }}>Evaluasi Akhir:</span> <span style={{ color: evalColor }}>{evalStatus}.</span> 
-              <span style={{ marginLeft: '6px' }}>Berdasarkan persetujuan atasan.</span>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ fontSize: '13px', color: '#475569' }}>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>Evaluasi Akhir:</span> <span style={{ color: evalColor }}>{evalStatus}.</span> 
+              </div>
+
+              {totalKpi > 0 && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/api/rekap/${karyawan.id}/export`, '_blank');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 16px', background: '#1A2B4A', color: '#fff',
+                    border: 'none', borderRadius: '6px', fontSize: '12px',
+                    fontWeight: '600', cursor: 'pointer', transition: '0.2s'
+                  }}
+                  onMouseOver={(e) => e.target.style.background = '#0f172a'}
+                  onMouseOut={(e) => e.target.style.background = '#1A2B4A'}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Export Excel
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
-    </div>
+  </div>
   );
 }
 
