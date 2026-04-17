@@ -30,7 +30,7 @@ const Ico = {
   Succ:   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 };
 
-const CSS = `*{box-sizing:border-box}.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}.page-header h1{font-size:22px;font-weight:700;color:#1a2b4a;margin:0}.btn{padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}.btn-primary{background:#1a2b4a;color:#fff}.btn-primary:hover{background:#243d6a}.btn-secondary{background:#f4f6f9;color:#374151;border:1.5px solid #e5eaf0}.btn-secondary:hover{background:#e8edf2}.btn:disabled{opacity:.5;cursor:not-allowed}.toolbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}.search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5eaf0;border-radius:10px;padding:0 14px}.search-box input{flex:1;border:none;outline:0;font-size:14px;padding:10px 0;background:0 0;color:#1a2b4a;font-family:'Plus Jakarta Sans',sans-serif}.search-box input::placeholder{color:#b0bcc8}.filter-select{padding:10px 14px;border:1.5px solid #e5eaf0;border-radius:10px;font-size:14px;color:#374151;background:#fff;cursor:pointer;outline:0;font-family:'Plus Jakarta Sans',sans-serif}.table-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);overflow:hidden}table{width:100%;border-collapse:collapse}th{text-align:left;padding:11px 16px;font-size:11px;font-weight:700;color:#7a8b9a;text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:1px solid #e8edf2}td{padding:13px 16px;font-size:14px;color:#374151;border-bottom:1px solid #f0f4f8;vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfc}.btn-edit{padding:5px 12px;background:#eff6ff;color:#3b7dd8;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}.btn-edit:hover{background:#dbeafe}.btn-revisi{padding:5px 12px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}.btn-revisi:hover{background:#fee2e2}.btn-export{padding:5px 12px;background:#f0fdf4;color:#16a34a;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:4px}.btn-export:hover{background:#dcfce7}.error-box{background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#dc2626;font-weight:500}.success-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#15803d;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-overlay{text-align:center;padding:80px;color:#7a8b9a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px}`;
+const CSS = `*{box-sizing:border-box}.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}.page-header h1{font-size:22px;font-weight:700;color:#1a2b4a;margin:0}.btn{padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}.btn-primary{background:#1a2b4a;color:#fff}.btn-primary:hover{background:#243d6a}.btn-secondary{background:#f4f6f9;color:#374151;border:1.5px solid #e5eaf0}.btn-secondary:hover{background:#e8edf2}.btn:disabled{opacity:.5;cursor:not-allowed}.toolbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}.search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5eaf0;border-radius:10px;padding:0 14px}.search-box input{flex:1;border:none;outline:0;font-size:14px;padding:10px 0;background:0 0;color:#1a2b4a;font-family:'Plus Jakarta Sans',sans-serif}.search-box input::placeholder{color:#b0bcc8}.filter-select{padding:10px 14px;border:1.5px solid #e5eaf0;border-radius:10px;font-size:14px;color:#374151;background:#fff;cursor:pointer;outline:0;font-family:'Plus Jakarta Sans',sans-serif}.table-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);overflow:hidden}table{width:100%;border-collapse:collapse}th{text-align:left;padding:11px 16px;font-size:11px;font-weight:700;color:#7a8b9a;text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:1px solid #e8edf2}td{padding:13px 16px;font-size:14px;color:#374151;border-bottom:1px solid #f0f4f8;vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfc}.btn-edit{padding:5px 12px;background:#eff6ff;color:#3b7dd8;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}.btn-edit:hover{background:#dbeafe}.btn-revisi{padding:5px 12px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}.btn-revisi:hover{background:#fee2e2}.btn-export{padding:5px 12px;background:#f0fdf4;color:#16a34a;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:4px}.btn-export:hover{background:#dcfce7}.error-box{background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#dc2626;font-weight:500}.success-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#15803d;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-overlay{text-align:center;padding:80px;color:#7a8b9a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px} .ac-wrap{position:relative;margin-bottom:20px} .ac-input{width:100%;padding:12px 16px;border:1.5px solid #3b82f6;border-radius:10px;font-size:14px;outline:none;font-family:'Plus Jakarta Sans',sans-serif;background:#eff6ff} .ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;max-height:220px;overflow-y:auto;z-index:20;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);margin-top:6px} .ac-item{padding:12px 16px;font-size:14px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;color:#1e293b} .ac-item:hover{background:#f8fafc} .ac-item strong{color:#0f172a}`;
 
 const StatBadge = ({ s }) => {
   const c = STAT_CFG[s] || STAT_CFG.draft;
@@ -40,16 +40,59 @@ const StatBadge = ({ s }) => {
 export default function KamusPage() {
   const [ui, setUi]     = useState({ v: 'list', id: null, stat: '', ldL: true, ldF: false, ldR: false, err: '', msg: '' });
   const [flt, setFlt]   = useState({ q: '', s: '' });
+  
+  const [periode, setPeriode] = useState(''); 
+  
   const [kamus, setKamus] = useState([]);
   const [form, setForm] = useState(INIT_FORM);
 
+  const [allHistoryKpi, setAllHistoryKpi] = useState([]);
+  const [searchRiwayat, setSearchRiwayat] = useState('');
+  const [showSuggest, setShowSuggest] = useState(false);
+
+  useEffect(() => {
+    const simpananTahun = localStorage.getItem('periodeKamus') || new Date().getFullYear().toString();
+    setPeriode(simpananTahun);
+
+    const handlePeriodeUpdate = () => {
+      const updatedPeriode = localStorage.getItem('periodeKamus');
+      if (updatedPeriode) setPeriode(updatedPeriode);
+    };
+
+    window.addEventListener('periodeChanged', handlePeriodeUpdate);
+    return () => window.removeEventListener('periodeChanged', handlePeriodeUpdate);
+  }, []);
+
+
   const fetchKamus = async () => {
+    if (!periode) return;
     setUi(p => ({ ...p, ldL: true }));
-    try { const r = await fetch('/api/kamus'); const d = await r.json(); setKamus(d.data || []); } 
+    try { 
+      const r = await fetch(`/api/kamus?periode=${periode}`); 
+      const d = await r.json(); 
+      setKamus(d.data || []); 
+    } 
     catch {} finally { setUi(p => ({ ...p, ldL: false })); }
   };
 
-  useEffect(() => { if (ui.v === 'list') fetchKamus(); }, [ui.v]);
+  useEffect(() => { 
+    if (ui.v === 'list' && periode) fetchKamus(); 
+  }, [ui.v, periode]);
+
+  const openTambah = async () => {
+    setForm(INIT_FORM);
+    setSearchRiwayat('');
+    setShowSuggest(false);
+    setUi(p => ({ ...p, v: 'tambah', stat: '', err: '' }));
+
+    if (allHistoryKpi.length === 0) {
+      try {
+        const r = await fetch('/api/kamus'); 
+        const d = await r.json();
+        setAllHistoryKpi(d.data || []);
+      } catch (e) {}
+    }
+  };
 
   const openRevisi = async (id) => {
     setUi(p => ({ ...p, err: '', msg: '', id, v: 'revisi', ldR: true }));
@@ -77,7 +120,6 @@ export default function KamusPage() {
     });
   };
 
-
   const handleAutoFill = (kpiData) => {
     setForm(p => ({
       ...p,
@@ -104,7 +146,14 @@ export default function KamusPage() {
     setUi(p => ({ ...p, err: '', ldF: true }));
     try {
       const isRev = ui.v === 'revisi';
-      const r = await fetch(isRev ? `/api/kamus/${ui.id}` : '/api/kamus', { method: isRev ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, status }) });
+      const payloadBody = { ...form, status, periode }; 
+
+      const r = await fetch(isRev ? `/api/kamus/${ui.id}` : '/api/kamus', { 
+        method: isRev ? 'PUT' : 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payloadBody) 
+      });
+
       if (!r.ok) throw new Error((await r.json()).error || 'Gagal menyimpan');
       setUi(p => ({ ...p, msg: status === 'draft' ? 'Draft berhasil disimpan!' : 'KPI berhasil dikirim!' })); 
       setTimeout(goBack, 1200);
@@ -115,6 +164,11 @@ export default function KamusPage() {
   const filtered = kamus.filter(k => (!flt.s || k.status === flt.s) && (k.nama_kpi?.toLowerCase().includes(flt.q.toLowerCase()) || k.perspektif_bsc?.toLowerCase().includes(flt.q.toLowerCase())));
   const formatTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
+  const suggestedKpis = allHistoryKpi.filter(k => 
+    k.nama_kpi?.toLowerCase().includes(searchRiwayat.toLowerCase()) && 
+    k.periode !== periode
+  );
+
   return (
     <>
       <style>{CSS}</style>
@@ -123,14 +177,18 @@ export default function KamusPage() {
       {ui.v === 'list' && (
         <div>
           <div className="page-header">
-            <h1>Kamus KPI Saya</h1>
-            <button className="btn btn-primary" onClick={() => { setForm(INIT_FORM); setUi(p => ({ ...p, v: 'tambah', stat: '', err: '' })); }}>
+            <h1>Kamus KPI Saya {periode ? `(${periode})` : ''}</h1>
+            <button className="btn btn-primary" onClick={openTambah}>
               {Ico.Add} Tambah Kamus KPI
             </button>
           </div>
 
           <div className="toolbar">
-            <div className="search-box">{Ico.Search}<input placeholder="Cari nama KPI..." value={flt.q} onChange={e => setFlt(p => ({ ...p, q: e.target.value }))} /></div>
+            <div className="search-box">
+              {Ico.Search}
+              <input placeholder="Cari nama KPI..." value={flt.q} onChange={e => setFlt(p => ({ ...p, q: e.target.value }))} />
+            </div>
+
             <select className="filter-select" value={flt.s} onChange={e => setFlt(p => ({ ...p, s: e.target.value }))}>
               <option value="">Semua Status</option>
               {Object.entries(STAT_CFG).map(([k, v]) => <option key={k} value={k}>{v.l}</option>)}
@@ -142,7 +200,7 @@ export default function KamusPage() {
              filtered.length === 0 ? (
               <div className="loading-overlay" style={{ flexDirection: 'column', gap: 12 }}>
                 {Ico.Empty}
-                <p>{flt.q || flt.s ? 'Tidak ada hasil pencarian.' : 'Belum ada KPI. Klik "+ Tambah Kamus KPI" untuk mulai.'}</p>
+                <p>{flt.q || flt.s ? 'Tidak ada hasil pencarian.' : `Belum ada KPI di tahun ${periode}. Klik "+ Tambah Kamus KPI" untuk mulai.`}</p>
               </div>
             ) : (
               <table>
@@ -175,7 +233,7 @@ export default function KamusPage() {
         <div>
           <div className="page-header">
             <div>
-              <h1>{ui.v === 'revisi' ? (ui.stat === 'revisi' ? 'Perbaiki Revisi KPI' : 'Revisi Kamus KPI') : 'Tambah Kamus KPI'}</h1>
+              <h1>{ui.v === 'revisi' ? (ui.stat === 'revisi' ? 'Perbaiki Revisi KPI' : 'Revisi Kamus KPI') : `Tambah Kamus KPI (${periode})`}</h1>
               <p style={{ fontSize: 14, color: '#7a8b9a', margin: '4px 0 0' }}>Field bertanda <span style={{ color: '#dc2626' }}>*</span> wajib diisi.</p>
             </div>
             <button className="btn btn-secondary" onClick={goBack}>{Ico.Back} Kembali</button>

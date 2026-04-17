@@ -27,12 +27,24 @@ export default function UserDashboard() {
   const [kamus, setKamus] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/kamus')
-      .then(r => r.json())
-      .then(d => setKamus(d.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+useEffect(() => {
+    const fetchData = () => {
+      setLoading(true);
+      
+      const currentYear = localStorage.getItem('periodeKamus') || new Date().getFullYear().toString();
+      
+      fetch(`/api/kamus?periode=${currentYear}`)
+        .then(r => r.json())
+        .then(d => setKamus(d.data || []))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    };
+
+    fetchData();
+
+    window.addEventListener('periodeChanged', fetchData);
+
+    return () => window.removeEventListener('periodeChanged', fetchData);
   }, []);
 
   const stats = {

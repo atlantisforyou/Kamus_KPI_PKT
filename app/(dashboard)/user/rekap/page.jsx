@@ -1,9 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2';
+import { InformasiDasarForm, KarakteristikKPIForm, TargetValidasiForm } from '@/components/ui/FormComponents';
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
 const B_LBL = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+
+const INIT_FORM = {
+  perspektif_bsc: '', sasaran_strategis: '', nama_kpi: '',
+  definisi_kpi: '', tujuan_kpi: '', tipe_kpi: '', formula_penilaian: '', jenis_pengukuran: '',
+  polaritas: '', frekuensi: '', target_jan: '', target_feb: '', target_mar: '', target_apr: '',
+  target_mei: '', target_jun: '', target_jul: '', target_agt: '', target_sep: '', target_okt: '',
+  target_nov: '', target_des: '', target_tahunan: '', sumber_data: '', satuan: '',
+  validitas: '', nilai_maksimum: '',
+};
 
 const STATUS_CONFIG = {
   draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6' },
@@ -14,7 +25,8 @@ const STATUS_CONFIG = {
 
 const Ico = {
   Close:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  Detail: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+  Detail: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+  Edit:   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
 };
 
 function StatusBadge({ status, customLabel }) {
@@ -39,7 +51,8 @@ function KpiDetailModal({ kpi, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
+      {/* Tambahkan max-width lebih kecil khusus untuk Detail Modal agar tidak terlalu lebar */}
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '680px' }}>
         <div className="modal-header">
           <h3>Detail KPI & Pencapaian</h3>
           <button className="modal-close" onClick={onClose}>{Ico.Close}</button>
@@ -95,7 +108,7 @@ function KpiDetailModal({ kpi, onClose }) {
 }
 
 // KOMPONEN KARTU KARYAWAN
-function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
+function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal, onRevisiClick }) {
   const [open, setOpen] = useState(defaultOpen);
 
   const filteredKpi = karyawan.kpi?.filter(k =>
@@ -171,7 +184,7 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                         <th width="15%">Target Total</th>
                         <th width="10%">Target s.d {labelBulan}</th>
                         <th width="15%">Realisasi s.d {labelBulan}</th>
-                        <th width="10%">Aksi</th>
+                        <th width="15%">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -185,28 +198,34 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, onOpenModal }) {
                             <td style={{ fontWeight: 600, color: '#0f172a' }}>{kpi.nama_kpi || '-'}</td>
                             <td>{kpi.polaritas || '-'}</td>
                             
-                            {/* Target Tahunan */}
                             <td style={{ fontWeight: 600 }}>
                               {kpi.target_tahunan ? `${kpi.target_tahunan} ${kpi.satuan || ''}` : '-'}
                             </td>
                             
-                            {/* Target Bulan Ini */}
                             <td>
                               {targetBulanIni ? `${targetBulanIni} ${kpi.satuan || ''}` : '-'}
                             </td>
                             
-                            {/* Realisasi Bulan Ini */}
                             <td>
                               {realisasiBulanIni ? `${realisasiBulanIni} ${kpi.satuan || ''}` : '-'}
                             </td>
                             
                             <td>
-                              <button 
-                                className="btn-detail"
-                                onClick={() => onOpenModal(kpi)}
-                              >
-                                {Ico.Detail} Detail
-                              </button>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button 
+                                  className="btn-detail"
+                                  onClick={() => onOpenModal(kpi)}
+                                >
+                                  {Ico.Detail} Detail
+                                </button>
+                                
+                                <button 
+                                  className="btn-revisi-sm"
+                                  onClick={() => onRevisiClick(kpi)}
+                                >
+                                  {Ico.Edit} Revisi
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -273,12 +292,78 @@ export default function RekapPage() {
   
   const [selectedKpi, setSelectedKpi] = useState(null);
   
-  useEffect(() => {
-    fetch('/api/rekap')
+  // STATE BARU UNTUK MODAL REVISI BENTUK FULL FORM
+  const [editKpi, setEditKpi] = useState(null); 
+  const [form, setForm] = useState(INIT_FORM);
+  const [loadingForm, setLoadingForm] = useState(false);
+  
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    const currentYear = localStorage.getItem('periodeKamus') || new Date().getFullYear().toString();
+    
+    fetch(`/api/rekap?periode=${currentYear}`)
       .then(r => r.json())
       .then(d => setData(d.data || []))
+      .catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchData();
+    window.addEventListener('periodeChanged', fetchData);
+    return () => window.removeEventListener('periodeChanged', fetchData);
+  }, [fetchData]);
+
+  // HANDLER UPDATE STATE FORM REVISI
+  const setFormField = (key) => (e) => {
+    const val = e.target ? e.target.value : e;
+    setForm(prev => {
+      const updated = { ...prev, [key]: val };
+      // Hitung otomatis Target Tahunan jika target bulan diedit
+      if (key.startsWith('target_') && key !== 'target_tahunan') {
+        const total = BULAN.reduce((sum, b) => {
+          const v = parseFloat(b === key.replace('target_', '') ? val : updated[`target_${b}`]) || 0;
+          return sum + v;
+        }, 0);
+        updated.target_tahunan = total > 0 ? total.toFixed(2) : '';
+      }
+      return updated;
+    });
+  };
+
+  // KETIKA TOMBOL REVISI DIKLIK PADA TABEL
+  const handleRevisiClick = (kpi) => {
+    setForm({ ...INIT_FORM, ...kpi }); // Salin data lama ke form
+    setEditKpi(kpi); // Buka modal Edit/Revisi
+  };
+
+  // KETIKA TOMBOL SIMPAN DI MODAL REVISI DIKLIK
+  const submitRevisi = async () => {
+    if (!form.nama_kpi.trim()) return Swal.fire("Peringatan", "Nama KPI wajib diisi!", "warning");
+
+    setLoadingForm(true);
+    try {
+      const r = await fetch(`/api/kamus/${editKpi.id}`, { 
+        method: 'PUT', // Menggunakan PUT untuk update data form
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(form)
+      });
+      
+      if (!r.ok) throw new Error();
+      
+      Swal.fire({ title: "Berhasil!", text: `KPI "${form.nama_kpi}" berhasil direvisi.`, icon: "success" });
+      
+      setEditKpi(null); // Tutup Modal Edit
+      fetchData();      // Refresh tabel
+    } catch { 
+      Swal.fire({ title: "Gagal!", text: 'Terjadi kesalahan saat menyimpan perubahan.', icon: "error" });
+    } finally {
+      setLoadingForm(false);
+    }
+  };
+
+  // Fungsi dummy Autofill (diperlukan oleh FormComponents)
+  const handleAutoFill = () => {};
 
   const units = [...new Set(data.map(k => k.nama_dept || k.unit_kerja).filter(Boolean))].sort();
 
@@ -348,35 +433,32 @@ export default function RekapPage() {
         .kpi-table td { padding: 14px 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .kpi-table tr:last-child td { border-bottom: none; }
         
-        /* Tombol Detail Baru */
+        /* Tombol Aksi */
         .btn-detail {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: #eff6ff;
-          color: #3b82f6;
-          border: 1px solid #bfdbfe;
-          border-radius: 6px;
-          font-size: 12px;
-          font-family: inherit;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
+          display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #eff6ff; color: #3b82f6;
+          border: 1px solid #bfdbfe; border-radius: 6px; font-size: 12px; font-family: inherit; font-weight: 600;
+          cursor: pointer; transition: all 0.2s;
         }
-        .btn-detail:hover {
-          background: #dbeafe;
-          color: #2563eb;
+        .btn-detail:hover { background: #dbeafe; color: #2563eb; }
+
+        .btn-revisi-sm {
+          display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fffbeb; color: #b91c1c;
+          border: 1px solid #fee2e2; border-radius: 6px; font-size: 12px; font-family: inherit; font-weight: 600;
+          cursor: pointer; transition: all 0.2s;
         }
+        .btn-revisi-sm:hover { background: #fef3c7; color: #b91c1c; }
 
         .eval-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap; gap: 12px; }
 
         /* ── MODAL STYLES ── */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
-        .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .2s ease; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; overflow-y: auto; }
+        
+        /* Lebarkan Max-Width Modal untuk Full Form */
+        .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 960px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); animation: modalIn .2s ease; position: relative; }
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 10; }
         .modal-header h3 { font-size: 16px; font-weight: 700; color: #1a2b4a; margin: 0; }
         .modal-close { width: 32px; height: 32px; border-radius: 8px; background: #f4f6f9; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
         .modal-close:hover { background: #e8edf2; }
@@ -394,17 +476,17 @@ export default function RekapPage() {
         .target-cell-sm .t-target, .target-cell-sm .t-real { font-size: 12px; font-weight: 600; color: #374151; display: flex; justify-content: space-between; }
         .target-cell-sm .t-real { color: #2563eb; }
         
-        .modal-actions { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; }
+        .modal-actions { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f4f8; justify-content: flex-end; position: sticky; bottom: 0; background: #fff; z-index: 10; }
         .btn-modal { padding: 10px 20px; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; transition: all .15s; }
         .btn-cancel { background: #f4f6f9; color: #374151; }
         .btn-cancel:hover { background: #e8edf2; }
+        .btn-save { background: #2563eb; color: white; }
+        .btn-save:hover { background: #1d4ed8; }
 
         @media (max-width: 768px) {
           .toolbar { flex-direction: column; align-items: stretch; }
           .filter-group, .search-wrapper { justify-content: space-between; width: 100%; }
           .search-box { width: 100%; }
-          .emp-dept { display: none; }
-          .eval-footer { flex-direction: column; align-items: flex-start; }
           .target-grid-sm { grid-template-columns: repeat(3, 1fr); }
         }
       `}</style>
@@ -419,22 +501,6 @@ export default function RekapPage() {
           <div className="toolbar">
             <div className="filter-group">
               <div className="filter-item">
-                Departemen: 
-                <select className="filter-select" value={filterUnit} onChange={e => setFilterUnit(e.target.value)}>
-                  <option value="">Semua</option>
-                  {units.map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
-              <div className="filter-item">
-                Periode: 
-                <select className="filter-select">
-                  <option>Q4</option>
-                  <option>Q3</option>
-                  <option>Q2</option>
-                  <option>Q1</option>
-                </select>
-              </div>
-              <div className="filter-item">
                 Status: 
                 <select className="filter-select">
                   <option>Semua</option>
@@ -446,7 +512,7 @@ export default function RekapPage() {
 
             <div className="search-wrapper">
               <div className="search-box">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg width="80" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
             </div>
@@ -467,6 +533,7 @@ export default function RekapPage() {
                   karyawan={k} 
                   search={search} 
                   onOpenModal={setSelectedKpi}
+                  onRevisiClick={handleRevisiClick} // Memanggil handler form edit
                 />
               ))}
             </div>
@@ -475,11 +542,44 @@ export default function RekapPage() {
         </div>
       </div>
 
-      {/* Modal Detail */}
+      {/* --- MODAL DETAIL BIASA (Read Only) --- */}
       <KpiDetailModal 
         kpi={selectedKpi} 
         onClose={() => setSelectedKpi(null)} 
       />
+
+      {/* --- MODAL REVISI BENTUK FULL FORM (Seperti Admin) --- */}
+      {editKpi && (
+        <div className="modal-overlay" onClick={() => setEditKpi(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Revisi (Edit) Data KPI</h3>
+              <button className="modal-close" onClick={() => setEditKpi(null)}>{Ico.Close}</button>
+            </div>
+            
+            <div className="modal-body" style={{ background: '#f4f8fc', padding: '24px' }}>
+              <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>
+                    Silakan ubah rincian KPI secara langsung di bawah ini.
+                 </p>
+                 {/* Re-use 3 Komponen Form Lengkap */}
+                 <InformasiDasarForm   form={form} set={setFormField} handleAutoFill={handleAutoFill} />
+                 <KarakteristikKPIForm form={form} set={setFormField} />
+                 <TargetValidasiForm   form={form} set={setFormField} />
+              </div>
+            </div>
+            
+            <div className="modal-actions">
+              <button className="btn-modal btn-cancel" onClick={() => setEditKpi(null)} disabled={loadingForm}>
+                Batal
+              </button>
+              <button className="btn-modal btn-save" onClick={submitRevisi} disabled={loadingForm}>
+                {loadingForm ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

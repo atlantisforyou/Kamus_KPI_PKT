@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
-// Import form komponen untuk fitur Edit/Revisi
 import { InformasiDasarForm, KarakteristikKPIForm, TargetValidasiForm } from '@/components/ui/FormComponents';
 
 const BULAN = ['jan','feb','mar','apr','mei','jun','jul','agt','sep','okt','nov','des'];
@@ -39,7 +38,7 @@ function StatusBadge({ status, customLabel }) {
   );
 }
 
-// MODAL DETAIL KPI (Read-Only)
+// MODAL DETAIL KPI
 function KpiDetailModal({ kpi, onClose, onRefresh }) {
   const [loadingApprove, setLoadingApprove] = useState(false);
 
@@ -204,7 +203,7 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, roleUser, onOpenM
                {karyawan.kpi?.length > 0 && (
                   <button onClick={(e) => { e.stopPropagation(); window.open(`/api/rekap/${karyawan.id}/export`, '_blank'); }} className="btn-export">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download Format Penilaian SKT
+                    Export Excel
                   </button>
                )}
              </div>
@@ -274,20 +273,23 @@ export default function RekapPage() {
   const [search, setSearch]   = useState('');
   const [filterUnit, setFilterUnit] = useState('');
   
-  const [selectedKpi, setSelectedKpi] = useState(null); // Untuk Modal Detail
-  const [editKpi, setEditKpi] = useState(null);         // Untuk Modal Revisi (Edit)
+  const [selectedKpi, setSelectedKpi] = useState(null);
+  const [editKpi, setEditKpi] = useState(null);
   const [roleUser, setRoleUser] = useState('');
 
-  // State untuk form Revisi/Edit
   const [form, setForm] = useState(INIT_FORM);
   const [loadingForm, setLoadingForm] = useState(false);
   
-  const loadData = () => {
-    fetch('/api/rekap')
+const loadData = useCallback(() => {
+    setLoading(true);
+    const currentYear = localStorage.getItem('periodeKamus') || new Date().getFullYear().toString();
+    
+    fetch(`/api/rekap?periode=${currentYear}`)
       .then(r => r.json())
       .then(d => setData(d.data || []))
+      .catch(err => console.error(err))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -296,14 +298,16 @@ export default function RekapPage() {
       .catch(() => {});
 
     loadData();
-  }, []);
 
-  // Handler Update State Form
+    window.addEventListener('periodeChanged', loadData);
+    
+    return () => window.removeEventListener('periodeChanged', loadData);
+  }, [loadData]);
+
   const setFormField = (key) => (e) => {
     const val = e.target ? e.target.value : e;
     setForm(prev => {
       const updated = { ...prev, [key]: val };
-      // Hitung otomatis Target Tahunan jika target bulan diedit
       if (key.startsWith('target_') && key !== 'target_tahunan') {
         const total = BULAN.reduce((sum, b) => {
           const v = parseFloat(b === key.replace('target_', '') ? val : updated[`target_${b}`]) || 0;
@@ -315,32 +319,28 @@ export default function RekapPage() {
     });
   };
 
-  // KETIKA TOMBOL REVISI DIKLIK
   const handleRevisiClick = (kpi) => {
-    // Isi data lama ke dalam state form
     setForm({ ...INIT_FORM, ...kpi });
-    setEditKpi(kpi); // Buka modal Edit/Revisi
+    setEditKpi(kpi);
   };
 
-  // KETIKA TOMBOL SIMPAN DI MODAL REVISI DIKLIK
   const submitRevisi = async () => {
     if (!form.nama_kpi.trim()) return Swal.fire("Peringatan", "Nama KPI wajib diisi!", "warning");
 
     setLoadingForm(true);
     try {
-      // Endpoint PATCH ke ID kpi untuk update isi dari form
       const r = await fetch(`/api/kamus/${editKpi.id}`, { 
         method: 'PATCH', 
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(form) // Mengirimkan semua data form yang diedit
+        body: JSON.stringify(form)
       });
       
       if (!r.ok) throw new Error();
       
       Swal.fire({ title: "Berhasil!", text: `KPI "${form.nama_kpi}" berhasil direvisi.`, icon: "success" });
       
-      setEditKpi(null); // Tutup Modal Edit
-      loadData();       // Refresh tabel
+      setEditKpi(null);
+      loadData();
     } catch { 
       Swal.fire({ title: "Gagal!", text: 'Terjadi kesalahan saat menyimpan perubahan.', icon: "error" });
     } finally {
@@ -503,8 +503,8 @@ export default function RekapPage() {
                   karyawan={k} 
                   search={search} 
                   roleUser={roleUser}
-                  onOpenModal={setSelectedKpi}    // Buka Modal Detail
-                  onRevisi={handleRevisiClick}    // Buka Modal Revisi (Edit)
+                  onOpenModal={setSelectedKpi}
+                  onRevisi={handleRevisiClick}
                 />
               ))}
             </div>
@@ -513,14 +513,12 @@ export default function RekapPage() {
         </div>
       </div>
 
-      {/* --- MODAL DETAIL (READ-ONLY) --- */}
       <KpiDetailModal 
         kpi={selectedKpi} 
         onClose={() => setSelectedKpi(null)} 
         onRefresh={loadData}
       />
 
-      {/* --- MODAL REVISI (EDIT KPI) --- */}
       {editKpi && (
         <div className="modal-overlay" onClick={() => setEditKpi(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -534,7 +532,6 @@ export default function RekapPage() {
                  <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>
                     Silakan ubah rincian KPI Karyawan di bawah ini secara langsung.
                  </p>
-                 {/* Re-use FormComponents yang diimport di atas */}
                  <InformasiDasarForm   form={form} set={setFormField} />
                  <KarakteristikKPIForm form={form} set={setFormField} />
                  <TargetValidasiForm   form={form} set={setFormField} />

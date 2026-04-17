@@ -15,9 +15,7 @@ export default function Header({ onLogout, loggingOut }) {
   const pathname = usePathname() || '';
   const roleLabel = ROLE_LABEL[pathname.split('/')[1]] || pathname.split('/')[1];
   
-
   const [dropProfile, setDropProfile] = useState(false);
-
   const [dropPeriode, setDropPeriode] = useState(false);
   
   const currentYear = new Date().getFullYear();
@@ -26,19 +24,36 @@ export default function Header({ onLogout, loggingOut }) {
 
   const [u, setU] = useState({});
 
-    useEffect(() => {
-      fetch('/api/auth/me')
-        .then(r => r.json())
-        .then(d => d.user && setU(d.user))
-        .catch(() => {});
-    }, []);
+  useEffect(() => {
+    const savedYear = localStorage.getItem('periodeKamus');
+    if (savedYear) {
+      setSelectedYear(parseInt(savedYear));
+    } else {
+      localStorage.setItem('periodeKamus', currentYear.toString());
+    }
+  }, [currentYear]);
 
-    const name = u.nama || roleLabel;
-    const initial = name.charAt(0).toUpperCase();
+  const handleYearChange = (y) => {
+    setSelectedYear(y);
+    setDropPeriode(false);
     
-    const roleDisplay = u.npk ? `NPK: ${u.npk}` : (u.unit_kerja || roleLabel);
+    localStorage.setItem('periodeKamus', y.toString());
+    window.dispatchEvent(new Event('periodeChanged'));
+  };
 
-    return (
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => d.user && setU(d.user))
+      .catch(() => {});
+  }, []);
+
+  const name = u.nama || roleLabel;
+  const initial = name.charAt(0).toUpperCase();
+  
+  const roleDisplay = u.npk ? `NPK: ${u.npk}` : (u.unit_kerja || roleLabel);
+
+  return (
     <>
       <style>{`
         .topbar-modern {
@@ -135,7 +150,7 @@ export default function Header({ onLogout, loggingOut }) {
                     <button 
                       key={y} 
                       className={`periode-item ${selectedYear === y ? 'active' : ''}`}
-                      onClick={() => { setSelectedYear(y); setDropPeriode(false); }}
+                      onClick={() => handleYearChange(y)}
                     >
                       {y}
                     </button>

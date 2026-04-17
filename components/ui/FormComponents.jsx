@@ -172,7 +172,7 @@ export function RichTextEditor({ value, onChange, placeholder }) {
   );
 }
 
-// KOMPONEN AUTOCOMPLETE NAMA KPI KHUSUS (AUTO-FILL) DARI ACUAN VP
+// KOMPONEN AUTOCOMPLETE NAMA KPI KHUSUS (AUTO-FILL) DARI ACUAN VP & RIWAYAT
 export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
   const [query, setQuery] = useState(value || '');
   const [pilihan, setPilihan] = useState([]);
@@ -180,15 +180,27 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
   const [masterData, setMasterData] = useState([]);
 
   useEffect(() => {
+    setQuery(value || '');
+  }, [value]);
+
+  useEffect(() => {
     const fetchMaster = async () => {
       try {
-        const currentYear = new Date().getFullYear().toString();
-        const res = await fetch(`/api/kamus?type=acuan_vp`);
+        const resVp = await fetch(`/api/kamus?type=acuan_vp`);
+        const jsonVp = await resVp.json();
+        const dataVp = (jsonVp.data || []).map(item => ({ ...item, _tipe: 'VP' }));
+
+        const resHist = await fetch(`/api/kamus`);
+        const jsonHist = await resHist.json();
+        const dataHist = (jsonHist.data || []).map(item => ({ ...item, _tipe: 'Riwayat' }));
+
+        const gabungan = [...dataVp, ...dataHist];
+
+        const uniqueData = Array.from(new Map(gabungan.map(item => [item.id, item])).values());
         
-        const responseJson = await res.json();
-        setMasterData(responseJson.data || []); 
+        setMasterData(uniqueData); 
       } catch (error) {
-        console.error("Gagal load master KPI dari VP:", error);
+        console.error("Gagal load master & riwayat KPI:", error);
       }
     };
     fetchMaster();
@@ -226,7 +238,7 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
         type="text"
         value={query}
         onChange={handleKetik}
-        placeholder="Cari referensi KPI dari VP, atau ketik baru..."
+        placeholder="Ketik untuk mencari referensi VP atau riwayat tahun lalu..."
         style={baseInput}
         onFocus={(e) => {
           focus(e);
@@ -258,8 +270,12 @@ export function AutocompleteNamaKPI({ value, onChange, onAutoFill }) {
               onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
             >
               <div style={{ color: '#374151', fontWeight: 600 }}>{item.nama_kpi}</div>
-              <div style={{ fontSize: 11, color: '#7a8b9a', marginTop: 2 }}>
-                Acuan dari: {item.pembuat_nama}
+              <div style={{ fontSize: 11, marginTop: 4, display: 'flex', gap: 6 }}>
+                {item._tipe === 'VP' ? (
+                  <span style={{ background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Acuan VP: {item.pembuat_nama}</span>
+                ) : (
+                  <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Riwayat Tahun: {item.periode}</span>
+                )}
               </div>
             </li>
           ))}

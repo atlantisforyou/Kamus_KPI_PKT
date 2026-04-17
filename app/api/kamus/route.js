@@ -61,96 +61,90 @@ export async function GET(request) {
     }
 
     const statusFilter = searchParams.get('status');
-    let query = '';
-    let params = [];
+        let filterSql = '';
+        let filterParams = [];
 
-    if (user.role === 'admin') {
-      if (statusFilter) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE k.status = ? ORDER BY k.created_at DESC`;
-        params = [statusFilter];
-      } else {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 ORDER BY k.created_at DESC`;
-      }
+        if (statusFilter) {
+          filterSql += ` AND k.status = ?`;
+          filterParams.push(statusFilter);
+        }
+        if (periodeFilter) {
+          filterSql += ` AND k.periode = ?`;
+          filterParams.push(periodeFilter);
+        }
 
-    } else if (user.role === 'key_partner') {
-      if (statusFilter) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ? AND p.role = 'user' AND k.status = ? ORDER BY k.created_at DESC`;
-        params = [user.unit_kerja, statusFilter];
-      } else {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ? AND p.role = 'user' ORDER BY k.created_at DESC`;
-        params = [user.unit_kerja];
-      }
+        let query = '';
+        let params = [];
 
- } else if (user.role === 'manajemen') {
-      let filterStatusSql = statusFilter ? `AND k.status = '${statusFilter}'` : '';
-      const isMine = searchParams.get('mine') === 'true';
+        if (user.role === 'admin') {
+          query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                  WHERE 1=1 ${filterSql} 
+                  ORDER BY k.created_at DESC`;
+          params = [...filterParams];
 
-      if (isMine) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE k.dibuat_oleh = ? ${filterStatusSql} ORDER BY k.created_at DESC`;
-        params = [user.id];
+        } else if (user.role === 'key_partner') {
+          query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                  WHERE p.unit_kerja = ? AND p.role = 'user' ${filterSql} 
+                  ORDER BY k.created_at DESC`;
+          params = [user.unit_kerja, ...filterParams];
 
-      } else if (user.departemen_id) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.departemen_id = ? AND p.role = 'user' ${filterStatusSql}
-                 ORDER BY k.created_at DESC`;
-        params = [user.departemen_id];
+        } else if (user.role === 'manajemen') {
+          const isMine = searchParams.get('mine') === 'true';
 
-      } else if (user.kompartemen_id) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k 
-                 LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 LEFT JOIN departemen d ON p.departemen_id = d.id
-                 WHERE (p.kompartemen_id = ? OR d.kompartemen_id = ?) 
-                   AND p.role = 'manajemen' 
-                   AND p.departemen_id IS NOT NULL ${filterStatusSql}
-                 ORDER BY k.created_at DESC`;
-        params = [user.kompartemen_id, user.kompartemen_id];
+          if (isMine) {
+            query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                    FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                    WHERE k.dibuat_oleh = ? ${filterSql} 
+                    ORDER BY k.created_at DESC`;
+            params = [user.id, ...filterParams];
 
-      } else if (user.direktorat_id) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k 
-                 LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 LEFT JOIN kompartemen komp ON p.kompartemen_id = komp.id
-                 WHERE (p.direktorat_id = ? OR komp.direktorat_id = ?) 
-                   AND p.role = 'manajemen' 
-                   AND p.kompartemen_id IS NOT NULL 
-                   AND p.departemen_id IS NULL ${filterStatusSql}
-                 ORDER BY k.created_at DESC`;
-        params = [user.direktorat_id, user.direktorat_id];
+          } else if (user.departemen_id) {
+            query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                    FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                    WHERE p.departemen_id = ? AND p.role = 'user' ${filterSql}
+                    ORDER BY k.created_at DESC`;
+            params = [user.departemen_id, ...filterParams];
 
-      } else {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE p.unit_kerja = ? ${filterStatusSql} ORDER BY k.created_at DESC`;
-        params = [user.unit_kerja];
-      }
+          } else if (user.kompartemen_id) {
+            query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                    FROM kamus_kpi k 
+                    LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                    LEFT JOIN departemen d ON p.departemen_id = d.id
+                    WHERE (p.kompartemen_id = ? OR d.kompartemen_id = ?) 
+                      AND p.role = 'manajemen' 
+                      AND p.departemen_id IS NOT NULL ${filterSql}
+                    ORDER BY k.created_at DESC`;
+            params = [user.kompartemen_id, user.kompartemen_id, ...filterParams];
 
-    } else {
-      if (statusFilter) {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE k.dibuat_oleh = ? AND k.status = ?
-                 ORDER BY k.created_at DESC`;
-        params = [user.id, statusFilter];
-      } else {
-        query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
-                 FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
-                 WHERE k.dibuat_oleh = ?
-                 ORDER BY k.created_at DESC`;
-        params = [user.id];
-      }
-    }
+          } else if (user.direktorat_id) {
+            query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                    FROM kamus_kpi k 
+                    LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                    LEFT JOIN kompartemen komp ON p.kompartemen_id = komp.id
+                    WHERE (p.direktorat_id = ? OR komp.direktorat_id = ?) 
+                      AND p.role = 'manajemen' 
+                      AND p.kompartemen_id IS NOT NULL 
+                      AND p.departemen_id IS NULL ${filterSql}
+                    ORDER BY k.created_at DESC`;
+            params = [user.direktorat_id, user.direktorat_id, ...filterParams];
+
+          } else {
+            query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                    FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                    WHERE p.unit_kerja = ? ${filterSql} 
+                    ORDER BY k.created_at DESC`;
+            params = [user.unit_kerja, ...filterParams];
+          }
+
+        } else {
+          query = `SELECT k.*, p.nama AS pembuat_nama, p.unit_kerja AS pembuat_unit
+                  FROM kamus_kpi k LEFT JOIN karyawan p ON k.dibuat_oleh = p.id
+                  WHERE k.dibuat_oleh = ? ${filterSql}
+                  ORDER BY k.created_at DESC`;
+          params = [user.id, ...filterParams];
+        }
 
     const [rows] = await db.execute(query, params);
     return NextResponse.json({ data: rows });

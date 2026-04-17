@@ -11,6 +11,17 @@ export async function GET(request) {
     
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const { searchParams } = new URL(request.url);
+    const periodeFilter = searchParams.get('periode');
+
+    let filterSql = '';
+    let filterParams = [];
+
+    if (periodeFilter) {
+      filterSql = ` AND k.periode = ?`;
+      filterParams.push(periodeFilter);
+    }
+
     let query = '';
     let params = [];
 
@@ -20,28 +31,30 @@ export async function GET(request) {
           p.id AS karyawan_id, p.nama, p.npk, p.unit_kerja,
           k.* FROM karyawan p
         INNER JOIN kamus_kpi k ON p.id = k.dibuat_oleh
+        WHERE 1=1 ${filterSql}
         ORDER BY p.unit_kerja ASC, p.nama ASC, k.created_at DESC
       `;
+      params = [...filterParams];
     } else if (user.role === 'key_partner' || user.role === 'manajemen') {
       query = `
         SELECT 
           p.id AS karyawan_id, p.nama, p.npk, p.unit_kerja,
           k.* FROM karyawan p
         INNER JOIN kamus_kpi k ON p.id = k.dibuat_oleh
-        WHERE p.unit_kerja = ?
+        WHERE p.unit_kerja = ? ${filterSql}
         ORDER BY p.nama ASC, k.created_at DESC
       `;
-      params = [user.unit_kerja];
+      params = [user.unit_kerja, ...filterParams];
     } else {
       query = `
         SELECT 
           p.id AS karyawan_id, p.nama, p.npk, p.unit_kerja,
           k.* FROM karyawan p
         INNER JOIN kamus_kpi k ON p.id = k.dibuat_oleh
-        WHERE p.id = ?
+        WHERE p.id = ? ${filterSql}
         ORDER BY k.created_at DESC
       `;
-      params = [user.id];
+      params = [user.id, ...filterParams];
     }
 
     const [rows] = await db.execute(query, params);
@@ -129,7 +142,9 @@ export async function GET(request) {
       return karyawan;
     });
 
-    return NextResponse.json({ data: hasilAkhir });
+    const filteredAkhir = hasilAkhir.filter(k => k.kpi.length > 0);
+
+    return NextResponse.json({ data: filteredAkhir });
   } catch (error) {
     console.error("Error API Rekap:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
