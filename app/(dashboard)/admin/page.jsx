@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import StatCard from '@/components/ui/StatCard';
 
 const Skel = ({ w = '100%', h = '14px', r = '6px' }) => <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />;
@@ -12,11 +12,39 @@ const NOTIF_STYLE = {
 };
 
 export default function AdminDashboard() {
-  const [data, setData] = useState({ stat: null, karyawanStatus: [], notices: [], load: true });
+  const [rawData, setRawData] = useState({ kar: [], kam: [], notices: [], load: true });
   const [showModalNotif, setShowModalNotif] = useState(false);
-  const [showModalKaryawan, setShowModalKaryawan] = useState(false); // Modal untuk list karyawan
-  const [searchTerm, setSearchTerm] = useState(''); // State untuk fitur search
+  const [showModalKaryawan, setShowModalKaryawan] = useState(false); 
+  const [searchTerm, setSearchTerm] = useState(''); 
+  
+  // 1. STATE PERIODE (Default akan diisi dari Header)
+  const [periode, setPeriode] = useState('');
 
+  // 2. EFFECT UNTUK SINKRONISASI DENGAN HEADER.JSX
+  useEffect(() => {
+    // Fungsi untuk membaca periode dari Header
+    const syncPeriodeFromHeader = () => {
+      const savedYear = localStorage.getItem('periodeKamus');
+      if (savedYear) {
+        setPeriode(savedYear);
+      } else {
+        setPeriode(new Date().getFullYear().toString()); // Fallback tahun ini
+      }
+    };
+
+    // Jalankan sekali saat halaman dimuat
+    syncPeriodeFromHeader();
+
+    // Dengarkan event perubahan dari Header.jsx
+    window.addEventListener('periodeChanged', syncPeriodeFromHeader);
+
+    // Bersihkan listener saat komponen di-unmount
+    return () => {
+      window.removeEventListener('periodeChanged', syncPeriodeFromHeader);
+    };
+  }, []);
+
+  // Effect untuk Fetch Data Awal
   useEffect(() => {
     (async () => {
       try {
@@ -28,35 +56,63 @@ export default function AdminDashboard() {
 
         const kar = rKar && rKar.ok ? ((await rKar.json()).data || []) : [];
         const kam = rKam && rKam.ok ? ((await rKam.json()).data || []) : [];
-        const allNotices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []) : [];
+        const notices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []) : [];
         
-        const count = (s) => kam.filter(k => k.status === s).length;
-
-        const mappedKaryawanStatus = kar.map(k => {
-          const idKaryawan = String(k.id);
-          const hasKamus = kam.some(kamusItem => {
-            return kamusItem && kamusItem.dibuat_oleh && String(kamusItem.dibuat_oleh) === idKaryawan;
-          });
-          return {
-            id: k.id,
-            nama: k.nama,
-            sudahMembuat: hasKamus
-          };
-        });
-
-        setData({
-          stat: { kar: kar.length, kam: kam.length, drf: count('draft'), sub: count('submitted'), rev: count('reviewed'), app: count('approved') },
-          karyawanStatus: mappedKaryawanStatus,
-          notices: allNotices,
-          load: false
-        });
-      } catch { setData(p => ({ ...p, load: false })); }
+        setRawData({ kar, kam, notices, load: false });
+      } catch { 
+        setRawData(p => ({ ...p, load: false })); 
+      }
     })();
   }, []);
 
-  const { stat, karyawanStatus, notices, load } = data;
+  // Filter Data Berdasarkan Periode
+  const dashboardData = useMemo(() => {
+    const { kar, kam, notices, load } = rawData;
+    
+    // Pastikan string periode cocok. Mengabaikan filter jika periode kosong
+    const filteredKam = !periode 
+      ? kam 
+      : kam.filter(item => {
+          const itemTahun = item.tahun || (item.created_at ? item.created_at.substring(0, 4) : '');
+          return String(itemTahun) === String(periode);
+        });
 
-  // Filter karyawan berdasarkan input pencarian
+    const count = (s) => filteredKam.filter(k => k.status === s).length;
+
+    const mappedKaryawanStatus = kar.map(k => {
+      const idKaryawan = String(k.id);
+      const kamusKaryawan = filteredKam.filter(kamusItem => kamusItem && kamusItem.dibuat_oleh && String(kamusItem.dibuat_oleh) === idKaryawan);
+      
+      const draft = kamusKaryawan.filter(item => item.status === 'draft').length;
+      const submitted = kamusKaryawan.filter(item => item.status === 'submitted').length;
+      const reviewed = kamusKaryawan.filter(item => item.status === 'reviewed').length;
+      const approved = kamusKaryawan.filter(item => item.status === 'approved').length;
+
+      return {
+        id: k.id,
+        nama: k.nama,
+        sudahMembuat: kamusKaryawan.length > 0,
+        stats: { draft, submitted, reviewed, approved, total: kamusKaryawan.length }
+      };
+    });
+
+    return {
+      load,
+      notices,
+      stat: { 
+        kar: kar.length, 
+        kam: filteredKam.length, 
+        drf: count('draft'), 
+        sub: count('submitted'), 
+        rev: count('reviewed'), 
+        app: count('approved') 
+      },
+      karyawanStatus: mappedKaryawanStatus
+    };
+  }, [rawData, periode]);
+
+  const { stat, karyawanStatus, notices, load } = dashboardData;
+
   const filteredKaryawan = karyawanStatus.filter(k => 
     k.nama?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -82,13 +138,13 @@ export default function AdminDashboard() {
         .karyawan-list::-webkit-scrollbar-track { background: #f0f4f8; border-radius: 4px; }
         .karyawan-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        .search-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .search-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; outline: none; transition: border-color 0.2s; color: #1a2b4a; background-color: #ffffff; }
         .search-input:focus { border-color: #3b7dd8; }
 
         @media (max-width: 768px){ .bottom-grid { grid-template-columns:1fr !important; } }
         
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; display:flex; justify-content:center; align-items:center; padding:20px; animation: fadeIn 0.2s ease; }
-        .modal-content { background:#fff; width:100%; max-width:600px; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.15); display:flex; flex-direction:column; animation: slideUp 0.3s ease; }
+        .modal-content { background:#fff; width:100%; max-width:900px; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.15); display:flex; flex-direction:column; animation: slideUp 0.3s ease; }
         .modal-header { padding:20px 24px; border-bottom:1px solid #f0f4f8; display:flex; justify-content:space-between; align-items:center; }
         .modal-body { padding:24px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -96,8 +152,10 @@ export default function AdminDashboard() {
       `}</style>
       
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a2b4a', marginBottom: 8 }}>Dashboard Admin</h1>
-        <p style={{ color: '#7a8b9a', fontSize: 14, marginBottom: 28 }}>Selamat datang di panel Administrator Kamus KPI.</p>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1a2b4a', marginBottom: 8 }}>Dashboard Admin</h1>
+          <p style={{ color: '#7a8b9a', fontSize: 14, margin: 0 }}>Selamat datang di panel Administrator Kamus KPI.</p>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 28 }}>
           {cards.map(s => (
@@ -107,6 +165,7 @@ export default function AdminDashboard() {
 
         <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
           
+          {/* SECTION STATUS PEMBUATAN KAMUS */}
           <div className="section-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Status Pembuatan Kamus</h2>
@@ -121,20 +180,37 @@ export default function AdminDashboard() {
             ) : karyawanStatus.length === 0 ? (
               <p style={{ fontSize: 14, color: '#b0bcc8', textAlign: 'center', padding: '32px 0' }}>Belum ada data karyawan.</p>
             ) : (
-              <div className="karyawan-list" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 6 }}>
+              <div className="karyawan-list" style={{ maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 6 }}>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 8px 4px', borderBottom: '2px solid #f0f4f8' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>NAMA KARYAWAN</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>STATUS KAMUS</span>
+                </div>
+
                 {karyawanStatus.slice(0, 5).map((k) => (
-                  <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{k.nama}</span>
-                    <span style={{ 
-                      fontSize: 11, 
-                      fontWeight: 700, 
-                      padding: '4px 10px', 
-                      borderRadius: 99, 
-                      color: k.sudahMembuat ? '#059669' : '#dc2626', 
-                      background: k.sudahMembuat ? '#d1fae5' : '#fee2e2' 
-                    }}>
-                      {k.sudahMembuat ? 'Sudah' : 'Belum'}
-                    </span>
+                  <div key={k.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{k.nama}</span>
+                      <span style={{ 
+                        fontSize: 11, 
+                        fontWeight: 700, 
+                        padding: '4px 10px', 
+                        borderRadius: 99, 
+                        color: k.sudahMembuat ? '#059669' : '#dc2626', 
+                        background: k.sudahMembuat ? '#d1fae5' : '#fee2e2' 
+                      }}>
+                        {k.sudahMembuat ? 'Sudah' : 'Belum'}
+                      </span>
+                    </div>
+                    
+                    {k.sudahMembuat && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#f1f5f9', color: '#64748b' }}>Draft: <b>{k.stats.draft}</b></span>
+                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#fef3c7', color: '#d97706' }}>Sub: <b>{k.stats.submitted}</b></span>
+                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#dbeafe', color: '#2563eb' }}>Rev: <b>{k.stats.reviewed}</b></span>
+                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: '#d1fae5', color: '#059669' }}>App: <b>{k.stats.approved}</b></span>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {karyawanStatus.length > 5 && (
@@ -144,12 +220,12 @@ export default function AdminDashboard() {
             )}
           </div>
 
+          {/* SECTION NOTICE BOARD */}
           <div className="section-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Notice board</h2>
               <button onClick={() => setShowModalNotif(true)} className="view-all-link">View all &rarr;</button>
             </div>
-            {/* Notice Board Items */}
             <div style={{ borderTop: '1px solid #f0f4f8', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {load ? (
                 <><Skel h="60px" r="8px" /><Skel h="60px" r="8px" /></>
@@ -174,7 +250,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* MODAL SEMUA KARYAWAN & SEARCH */}
+      {/* MODAL KARYAWAN */}
       {showModalKaryawan && (
         <div className="modal-overlay" onClick={() => setShowModalKaryawan(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -201,21 +277,38 @@ export default function AdminDashboard() {
               {filteredKaryawan.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Karyawan tidak ditemukan.</div>
               ) : (
-                filteredKaryawan.map((k) => (
-                  <div key={`modal-${k.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{k.nama}</span>
-                    <span style={{ 
-                      fontSize: 12, 
-                      fontWeight: 700, 
-                      padding: '5px 12px', 
-                      borderRadius: 99, 
-                      color: k.sudahMembuat ? '#059669' : '#dc2626', 
-                      background: k.sudahMembuat ? '#d1fae5' : '#fee2e2' 
-                    }}>
-                      {k.sudahMembuat ? 'Sudah Membuat' : 'Belum Membuat'}
-                    </span>
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 8px 4px', borderBottom: '2px solid #f0f4f8', marginBottom: '4px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>NAMA KARYAWAN</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.5px' }}>STATUS KAMUS</span>
                   </div>
-                ))
+                  {filteredKaryawan.map((k) => (
+                    <div key={`modal-${k.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 16px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{k.nama}</span>
+                        <span style={{ 
+                          fontSize: 12, 
+                          fontWeight: 700, 
+                          padding: '5px 12px', 
+                          borderRadius: 99, 
+                          color: k.sudahMembuat ? '#059669' : '#dc2626', 
+                          background: k.sudahMembuat ? '#d1fae5' : '#fee2e2' 
+                        }}>
+                          {k.sudahMembuat ? 'Sudah Membuat' : 'Belum Membuat'}
+                        </span>
+                      </div>
+
+                      {k.sudahMembuat && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: '#f1f5f9', color: '#64748b' }}>Draft: <b>{k.stats.draft}</b></span>
+                          <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: '#fef3c7', color: '#d97706' }}>Submitted: <b>{k.stats.submitted}</b></span>
+                          <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: '#dbeafe', color: '#2563eb' }}>Reviewed: <b>{k.stats.reviewed}</b></span>
+                          <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: '#d1fae5', color: '#059669' }}>Approved: <b>{k.stats.approved}</b></span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </>
               )}
             </div>
           </div>
