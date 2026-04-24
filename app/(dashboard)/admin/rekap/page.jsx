@@ -29,6 +29,19 @@ const Ico = {
   Revisi: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
 };
 
+// Fungsi Format Waktu
+const formatWaktu = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleString('id-ID', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  }).replace(/\./g, ':');
+};
+
 function StatusBadge({ status, customLabel }) {
   const s = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
   return (
@@ -101,6 +114,7 @@ function KpiDetailModal({ kpi, onClose, onRefresh }) {
             <DRow l="Definisi KPI" v={kpi.definisi_kpi} />
             <DRow l="Tujuan KPI" v={kpi.tujuan_kpi} />
             <DRow l="Status" v={<StatusBadge status={kpi.status} />} />
+            <DRow l="Dibuat Pada" v={formatWaktu(kpi.created_at)} />
           </div>
           
           <div className="detail-section">
@@ -222,7 +236,7 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, roleUser, onOpenM
                     <th width="15%">Target Tahunan</th>
                     <th width="10%">Target Bulan Ini</th>
                     <th width="10%">Bobot</th>
-                    <th width="10%">Status</th>
+                    <th width="12%">Timestamp</th>
                     <th width="10%">Aksi</th>
                   </tr>
                 </thead>
@@ -242,7 +256,9 @@ function KaryawanCard({ karyawan, defaultOpen = false, search, roleUser, onOpenM
                         <td style={{ fontWeight: 700, color: '#1a2b4a' }}>{kpi.target_tahunan || '-'}</td>
                         <td>{targetSdSekarang}</td>
                         <td>{kpi.bobot ? `${kpi.bobot}%` : '0%'}</td>
-                        <td><StatusBadge status={kpi.status} /></td>
+                        <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>
+                          {formatWaktu(kpi.created_at || kpi.updated_at)} {/* Data Timestamp */}
+                        </td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                           <div style={{ display: 'flex', gap: 6 }}>
                              <button className="btn-detail" onClick={() => onOpenModal(kpi)}>
@@ -280,15 +296,20 @@ export default function RekapPage() {
   const [form, setForm] = useState(INIT_FORM);
   const [loadingForm, setLoadingForm] = useState(false);
   
-const loadData = useCallback(() => {
-    setLoading(true);
+const loadData = useCallback((isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true); 
+    }
+    
     const currentYear = localStorage.getItem('periodeKamus') || new Date().getFullYear().toString();
     
-    fetch(`/api/rekap?periode=${currentYear}`)
+    fetch(`/api/rekap?periode=${currentYear}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(d => setData(d.data || []))
       .catch(err => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!isSilent) setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -299,9 +320,10 @@ const loadData = useCallback(() => {
 
     loadData();
 
-    window.addEventListener('periodeChanged', loadData);
+    const handlePeriodeChange = () => loadData(false);
+    window.addEventListener('periodeChanged', handlePeriodeChange);
     
-    return () => window.removeEventListener('periodeChanged', loadData);
+    return () => window.removeEventListener('periodeChanged', handlePeriodeChange);
   }, [loadData]);
 
   const setFormField = (key) => (e) => {
@@ -320,19 +342,33 @@ const loadData = useCallback(() => {
   };
 
   const handleRevisiClick = (kpi) => {
-    setForm({ ...INIT_FORM, ...kpi });
-    setEditKpi(kpi);
-  };
+      const cleanFormData = { ...INIT_FORM };
+      Object.keys(INIT_FORM).forEach(key => {
+        if (kpi[key] !== undefined && kpi[key] !== null) {
+          cleanFormData[key] = kpi[key];
+        }
+      });
+
+      setForm(cleanFormData);
+      setEditKpi(kpi);
+    };
 
   const submitRevisi = async () => {
     if (!form.nama_kpi.trim()) return Swal.fire("Peringatan", "Nama KPI wajib diisi!", "warning");
 
     setLoadingForm(true);
     try {
+      const cleanData = { ...form };
+      delete cleanData.id;
+      delete cleanData.created_at;
+      delete cleanData.updated_at;
+      delete cleanData.pembuat_nama;
+      delete cleanData.pembuat_unit;
+
       const r = await fetch(`/api/kamus/${editKpi.id}`, { 
-        method: 'PATCH', 
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(form)
+        body: JSON.stringify(cleanData)
       });
       
       if (!r.ok) throw new Error();
@@ -340,7 +376,7 @@ const loadData = useCallback(() => {
       Swal.fire({ title: "Berhasil!", text: `KPI "${form.nama_kpi}" berhasil direvisi.`, icon: "success" });
       
       setEditKpi(null);
-      loadData();
+      loadData(true);
     } catch { 
       Swal.fire({ title: "Gagal!", text: 'Terjadi kesalahan saat menyimpan perubahan.', icon: "error" });
     } finally {

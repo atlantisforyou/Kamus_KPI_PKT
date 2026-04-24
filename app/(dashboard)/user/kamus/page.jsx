@@ -11,7 +11,7 @@ const INIT_FORM = {
   target_nov: '', target_des: '', target_tahunan: '', sumber_data: '', satuan: '', validitas: '', nilai_maksimum: '',
 };
 
-const STAT_CFG = {
+const STATUS_CONFIG = {
   draft:     { l: 'Draft',     c: '#6b7280', bg: '#f3f4f6' },
   submitted: { l: 'Submitted', c: '#d97706', bg: '#fef3c7' }, 
   reviewed:  { l: 'Reviewed',  c: '#2563eb', bg: '#dbeafe' }, 
@@ -33,7 +33,7 @@ const Ico = {
 const CSS = `*{box-sizing:border-box}.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}.page-header h1{font-size:22px;font-weight:700;color:#1a2b4a;margin:0}.btn{padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}.btn-primary{background:#1a2b4a;color:#fff}.btn-primary:hover{background:#243d6a}.btn-secondary{background:#f4f6f9;color:#374151;border:1.5px solid #e5eaf0}.btn-secondary:hover{background:#e8edf2}.btn:disabled{opacity:.5;cursor:not-allowed}.toolbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}.search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5eaf0;border-radius:10px;padding:0 14px}.search-box input{flex:1;border:none;outline:0;font-size:14px;padding:10px 0;background:0 0;color:#1a2b4a;font-family:'Plus Jakarta Sans',sans-serif}.search-box input::placeholder{color:#b0bcc8}.filter-select{padding:10px 14px;border:1.5px solid #e5eaf0;border-radius:10px;font-size:14px;color:#374151;background:#fff;cursor:pointer;outline:0;font-family:'Plus Jakarta Sans',sans-serif}.table-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);overflow:hidden}table{width:100%;border-collapse:collapse}th{text-align:left;padding:11px 16px;font-size:11px;font-weight:700;color:#7a8b9a;text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:1px solid #e8edf2}td{padding:13px 16px;font-size:14px;color:#374151;border-bottom:1px solid #f0f4f8;vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfc}.btn-edit{padding:5px 12px;background:#eff6ff;color:#3b7dd8;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}.btn-edit:hover{background:#dbeafe}.btn-revisi{padding:5px 12px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}.btn-revisi:hover{background:#fee2e2}.btn-export{padding:5px 12px;background:#f0fdf4;color:#16a34a;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:4px}.btn-export:hover{background:#dcfce7}.error-box{background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#dc2626;font-weight:500}.success-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#15803d;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px}.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-overlay{text-align:center;padding:80px;color:#7a8b9a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px} .ac-wrap{position:relative;margin-bottom:20px} .ac-input{width:100%;padding:12px 16px;border:1.5px solid #3b82f6;border-radius:10px;font-size:14px;outline:none;font-family:'Plus Jakarta Sans',sans-serif;background:#eff6ff} .ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;max-height:220px;overflow-y:auto;z-index:20;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);margin-top:6px} .ac-item{padding:12px 16px;font-size:14px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;color:#1e293b} .ac-item:hover{background:#f8fafc} .ac-item strong{color:#0f172a}`;
 
 const StatBadge = ({ s }) => {
-  const c = STAT_CFG[s] || STAT_CFG.draft;
+  const c = STATUS_CONFIG[s] || STATUS_CONFIG.draft;
   return <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: c.bg, color: c.c }}>{c.l}</span>;
 };
 
@@ -191,7 +191,7 @@ export default function KamusPage() {
 
             <select className="filter-select" value={flt.s} onChange={e => setFlt(p => ({ ...p, s: e.target.value }))}>
               <option value="">Semua Status</option>
-              {Object.entries(STAT_CFG).map(([k, v]) => <option key={k} value={k}>{v.l}</option>)}
+              {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.l}</option>)}
             </select>
           </div>
 
@@ -204,7 +204,7 @@ export default function KamusPage() {
               </div>
             ) : (
               <table>
-                <thead><tr><th>#</th><th>Nama KPI</th><th>Perspektif BSC</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>#</th><th>Nama KPI</th><th>Perspektif BSC</th><th>Tanggal</th><th>Status</th></tr></thead>
                 <tbody>
                   {filtered.map((k, i) => (
                     <tr key={k.id}>
@@ -213,12 +213,8 @@ export default function KamusPage() {
                       <td style={{ fontSize: 13, color: '#7a8b9a' }}>{k.perspektif_bsc || '-'}</td>
                       <td style={{ fontSize: 13, color: '#7a8b9a', whiteSpace: 'nowrap' }}>{formatTgl(k.created_at)}</td>
                       <td><StatBadge s={k.status} /></td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <button className="btn-revisi" onClick={() => openRevisi(k.id)}>{Ico.Edit} {k.status === 'revisi' ? 'Perbaiki Revisi' : 'Revisi'}</button>
-                          {k.status === 'approved' && <a href={`/api/kamus/${k.id}/export`} target="_blank" rel="noopener noreferrer" className="btn-export">{Ico.Exp} Export</a>}
-                        </div>
-                      </td>
+                      {/* Di sini bagian <td> yang berisi tombol aksi dihapus 
+                      */}
                     </tr>
                   ))}
                 </tbody>

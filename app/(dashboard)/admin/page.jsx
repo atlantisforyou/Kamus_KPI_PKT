@@ -5,19 +5,6 @@ import StatCard from '@/components/ui/StatCard';
 
 const Skel = ({ w = '100%', h = '14px', r = '6px' }) => <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />;
 
-const PBar = ({ l, pct, c, tot, app, load }) => (
-  <div style={{ marginBottom: 18 }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
-      <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{load ? <Skel w="140px" h="13px" /> : l}</span>
-      <span style={{ fontSize: 14, fontWeight: 800, color: c }}>{load ? <Skel w="36px" h="13px" /> : `${pct}%`}</span>
-    </div>
-    <div style={{ height: 8, background: '#f0f4f8', borderRadius: 99, overflow: 'hidden' }}>
-      {load ? <Skel w="100%" h="8px" r="99px" /> : <div style={{ height: '100%', width: `${pct}%`, background: c, borderRadius: 99, transition: 'width 0.8s ease' }} />}
-    </div>
-    {!load && <p style={{ fontSize: 11, color: '#b0bcc8', marginTop: 4 }}>{app} dari {tot} KPI ({tot === 0 ? '0%' : pct + '%'})</p>}
-  </div>
-);
-
 const NOTIF_STYLE = {
   info:    { bg: '#f8fafc', border: '#3b7dd8' },
   warning: { bg: '#fffbeb', border: '#f59e0b' },
@@ -25,8 +12,10 @@ const NOTIF_STYLE = {
 };
 
 export default function AdminDashboard() {
-  const [data, setData] = useState({ stat: null, bsc: [], notices: [], load: true });
+  const [data, setData] = useState({ stat: null, karyawanStatus: [], notices: [], load: true });
   const [showModalNotif, setShowModalNotif] = useState(false);
+  const [showModalKaryawan, setShowModalKaryawan] = useState(false); // Modal untuk list karyawan
+  const [searchTerm, setSearchTerm] = useState(''); // State untuk fitur search
 
   useEffect(() => {
     (async () => {
@@ -42,15 +31,22 @@ export default function AdminDashboard() {
         const allNotices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []) : [];
         
         const count = (s) => kam.filter(k => k.status === s).length;
-        const bscCats = ['Financial', 'Customer', 'Internal Business Process', 'Learning & Growth'];
+
+        const mappedKaryawanStatus = kar.map(k => {
+          const idKaryawan = String(k.id);
+          const hasKamus = kam.some(kamusItem => {
+            return kamusItem && kamusItem.dibuat_oleh && String(kamusItem.dibuat_oleh) === idKaryawan;
+          });
+          return {
+            id: k.id,
+            nama: k.nama,
+            sudahMembuat: hasKamus
+          };
+        });
 
         setData({
           stat: { kar: kar.length, kam: kam.length, drf: count('draft'), sub: count('submitted'), rev: count('reviewed'), app: count('approved') },
-          bsc: bscCats.map(c => {
-            const inCat = kam.filter(k => k.perspektif_bsc?.toLowerCase().includes(c.toLowerCase()));
-            const app = inCat.filter(k => k.status === 'approved').length;
-            return { l: c, tot: inCat.length, app, pct: inCat.length ? Math.round((app / inCat.length) * 100) : 0 };
-          }),
+          karyawanStatus: mappedKaryawanStatus,
           notices: allNotices,
           load: false
         });
@@ -58,8 +54,13 @@ export default function AdminDashboard() {
     })();
   }, []);
 
-  const { stat, bsc, notices, load } = data;
-  const BSC_COLORS = ['#10b981', '#3b7dd8', '#f59e0b', '#8b5cf6'];
+  const { stat, karyawanStatus, notices, load } = data;
+
+  // Filter karyawan berdasarkan input pencarian
+  const filteredKaryawan = karyawanStatus.filter(k => 
+    k.nama?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
   const cards = [
     { l: 'Total Karyawan', v: stat?.kar, c: '#3b7dd8', h: '/admin/karyawan' },
     { l: 'Total Kamus KPI',v: stat?.kam, c: '#1a2b4a', h: '/admin/monitoring' },
@@ -76,9 +77,16 @@ export default function AdminDashboard() {
         .section-card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 1px 8px rgba(0,0,0,.06); }
         .view-all-link { font-size:13px; color:#3b7dd8; font-weight:600; text-decoration:none; background:transparent; border:none; cursor:pointer; padding:0; font-family:inherit; }
         .view-all-link:hover { opacity:0.8; }
+        
+        .karyawan-list::-webkit-scrollbar { width: 6px; }
+        .karyawan-list::-webkit-scrollbar-track { background: #f0f4f8; border-radius: 4px; }
+        .karyawan-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .search-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: #3b7dd8; }
+
         @media (max-width: 768px){ .bottom-grid { grid-template-columns:1fr !important; } }
         
-        /* Modal Styles */
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; display:flex; justify-content:center; align-items:center; padding:20px; animation: fadeIn 0.2s ease; }
         .modal-content { background:#fff; width:100%; max-width:600px; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.15); display:flex; flex-direction:column; animation: slideUp 0.3s ease; }
         .modal-header { padding:20px 24px; border-bottom:1px solid #f0f4f8; display:flex; justify-content:space-between; align-items:center; }
@@ -100,11 +108,40 @@ export default function AdminDashboard() {
         <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
           
           <div className="section-card">
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', marginBottom: 4 }}>Progres Perspektif BSC</h2>
-            <p style={{ fontSize: 13, color: '#7a8b9a', marginBottom: 22 }}>Distribusi dan status approval KPI berdasarkan 4 perspektif Balanced Scorecard.</p>
-            {load ? Array.from({ length: 4 }).map((_, i) => <PBar key={i} load />) : 
-              !bsc.length ? <p style={{ fontSize: 14, color: '#b0bcc8', textAlign: 'center', padding: '32px 0' }}>Belum ada data KPI.</p> : 
-              bsc.map((p, i) => <PBar key={p.l} l={p.l} pct={p.pct} c={BSC_COLORS[i % BSC_COLORS.length]} tot={p.tot} app={p.app} load={false} />)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Status Pembuatan Kamus</h2>
+              <button onClick={() => setShowModalKaryawan(true)} className="view-all-link">Lihat semua &rarr;</button>
+            </div>
+            <p style={{ fontSize: 13, color: '#7a8b9a', marginBottom: 22 }}>Daftar karyawan dan status pembuatan kamus KPI.</p>
+            
+            {load ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Skel h="48px" r="8px" /><Skel h="48px" r="8px" /><Skel h="48px" r="8px" />
+              </div>
+            ) : karyawanStatus.length === 0 ? (
+              <p style={{ fontSize: 14, color: '#b0bcc8', textAlign: 'center', padding: '32px 0' }}>Belum ada data karyawan.</p>
+            ) : (
+              <div className="karyawan-list" style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 6 }}>
+                {karyawanStatus.slice(0, 5).map((k) => (
+                  <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{k.nama}</span>
+                    <span style={{ 
+                      fontSize: 11, 
+                      fontWeight: 700, 
+                      padding: '4px 10px', 
+                      borderRadius: 99, 
+                      color: k.sudahMembuat ? '#059669' : '#dc2626', 
+                      background: k.sudahMembuat ? '#d1fae5' : '#fee2e2' 
+                    }}>
+                      {k.sudahMembuat ? 'Sudah' : 'Belum'}
+                    </span>
+                  </div>
+                ))}
+                {karyawanStatus.length > 5 && (
+                  <p style={{ fontSize: 12, textAlign: 'center', color: '#94a3b8', marginTop: 10 }}>Menampilkan 5 dari {karyawanStatus.length} karyawan.</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="section-card">
@@ -112,7 +149,7 @@ export default function AdminDashboard() {
               <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Notice board</h2>
               <button onClick={() => setShowModalNotif(true)} className="view-all-link">View all &rarr;</button>
             </div>
-            
+            {/* Notice Board Items */}
             <div style={{ borderTop: '1px solid #f0f4f8', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {load ? (
                 <><Skel h="60px" r="8px" /><Skel h="60px" r="8px" /></>
@@ -137,19 +174,62 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* MODAL SEMUA KARYAWAN & SEARCH */}
+      {showModalKaryawan && (
+        <div className="modal-overlay" onClick={() => setShowModalKaryawan(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Status Karyawan</h2>
+                <p style={{ fontSize: 12, color: '#7a8b9a', margin: 0 }}>Total {karyawanStatus.length} karyawan</p>
+              </div>
+              <button onClick={() => { setShowModalKaryawan(false); setSearchTerm(''); }} style={{ background: '#f4f6f9', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+            
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #f0f4f8' }}>
+              <input 
+                type="text" 
+                placeholder="Cari nama karyawan..." 
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="modal-body">
+              {filteredKaryawan.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Karyawan tidak ditemukan.</div>
+              ) : (
+                filteredKaryawan.map((k) => (
+                  <div key={`modal-${k.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#1a2b4a' }}>{k.nama}</span>
+                    <span style={{ 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      padding: '5px 12px', 
+                      borderRadius: 99, 
+                      color: k.sudahMembuat ? '#059669' : '#dc2626', 
+                      background: k.sudahMembuat ? '#d1fae5' : '#fee2e2' 
+                    }}>
+                      {k.sudahMembuat ? 'Sudah Membuat' : 'Belum Membuat'}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NOTIFIKASI */}
       {showModalNotif && (
         <div className="modal-overlay" onClick={() => setShowModalNotif(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Semua Pemberitahuan</h2>
-              <button 
-                onClick={() => setShowModalNotif(false)} 
-                style={{ background: '#f4f6f9', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
-              >
-                ✕
-              </button>
+              <button onClick={() => setShowModalNotif(false)} style={{ background: '#f4f6f9', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
-            
             <div className="modal-body">
               {notices.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Tidak ada pemberitahuan.</div>
@@ -157,10 +237,10 @@ export default function AdminDashboard() {
                 notices.map((n) => {
                   const style = NOTIF_STYLE[n.tipe] || NOTIF_STYLE.info;
                   return (
-                    <div key={`modal-${n.id}`} style={{ padding: '16px', background: style.bg, borderRadius: 10, borderLeft: `4px solid ${style.border}` }}>
+                    <div key={`modal-notif-${n.id}`} style={{ padding: '16px', background: style.bg, borderRadius: 10, borderLeft: `4px solid ${style.border}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#1a2b4a' }}>{n.judul}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap', marginLeft: 12 }}>{n.waktu_teks}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8' }}>{n.waktu_teks}</div>
                       </div>
                       <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>{n.pesan}</div>
                     </div>
