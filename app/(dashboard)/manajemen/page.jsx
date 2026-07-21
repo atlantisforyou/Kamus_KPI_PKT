@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import StatCard from '@/components/ui/StatCard';
 
@@ -21,31 +21,65 @@ function StatusBadge({ status }) {
 }
 
 export default function ManajemenDashboard() {
-  const [stats, setStats]     = useState({ total: 0, reviewed: 0, approved: 0 });
-  const [histori, setHistori] = useState([]);
+  const [rawData, setRawData] = useState([]); // Menyimpan semua data dari API
   const [loading, setLoading] = useState(true);
+  const [periode, setPeriode] = useState(''); // Menyimpan periode terpilih
 
+  // 1. SINKRONISASI PERIODE DARI HEADER
+  useEffect(() => {
+    const syncPeriodeFromHeader = () => {
+      const savedYear = localStorage.getItem('periodeKamus');
+      if (savedYear) {
+        setPeriode(savedYear);
+      } else {
+        setPeriode(new Date().getFullYear().toString()); 
+      }
+    };
+
+    syncPeriodeFromHeader();
+    window.addEventListener('periodeChanged', syncPeriodeFromHeader);
+
+    return () => {
+      window.removeEventListener('periodeChanged', syncPeriodeFromHeader);
+    };
+  }, []);
+
+  // 2. FETCH DATA KAMUS SEKALI SAJA SAAT MOUNT
   useEffect(() => {
     fetch('/api/kamus?all=true')
       .then(r => r.json())
       .then(d => {
-        const list = d.data || [];
-        
-        setStats({
-          total:    list.length,
-          reviewed: list.filter(k => k.status === 'reviewed').length,
-          approved: list.filter(k => k.status === 'approved').length,
-        });
-
-        const hist = list
-          .filter(k => ['approved', 'revisi'].includes(k.status))
-          .sort((a, b) => 
-            new Date(b.approved_at || b.updated_at) - new Date(a.approved_at || a.updated_at)
-          );
-        setHistori(hist);
+        setRawData(d.data || []);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // 3. FILTER DATA BERDASARKAN PERIODE SECARA REAKTIF
+  const { stats, histori } = useMemo(() => {
+    // Filter data berdasarkan tahun yang cocok dengan periode
+    const filteredList = !periode 
+      ? rawData 
+      : rawData.filter(item => {
+          const itemTahun = item.tahun || (item.created_at ? item.created_at.substring(0, 4) : '');
+          return String(itemTahun) === String(periode);
+        });
+
+    // Hitung statistik dari data yang sudah difilter
+    const calculatedStats = {
+      total:    filteredList.length,
+      reviewed: filteredList.filter(k => k.status === 'reviewed').length,
+      approved: filteredList.filter(k => k.status === 'approved').length,
+    };
+
+    // Buat riwayat dari data yang sudah difilter
+    const calculatedHistori = filteredList
+      .filter(k => ['approved', 'revisi'].includes(k.status))
+      .sort((a, b) => 
+        new Date(b.approved_at || b.updated_at) - new Date(a.approved_at || a.updated_at)
+      );
+
+    return { stats: calculatedStats, histori: calculatedHistori };
+  }, [rawData, periode]); // Akan dikalkulasi ulang setiap rawData atau periode berubah
 
   const formatTgl = (d) => d
     ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -106,7 +140,7 @@ export default function ManajemenDashboard() {
           <div className="section-header">
             <div>
               <div className="section-title">Riwayat Keputusan</div>
-              <div className="section-sub">KPI yang sudah di-approve atau dikembalikan untuk revisi</div>
+              <div className="section-sub">KPI yang sudah di-approve atau dikembalikan untuk revisi pada periode {periode}</div>
             </div>
             {!loading && histori.length > 0 && (
               <span style={{ fontSize: '13px', color: '#7a8b9a', fontWeight: '500' }}>{histori.length} entri</span>
@@ -129,7 +163,7 @@ export default function ManajemenDashboard() {
             ) : histori.length === 0 ? (
               <div className="empty">
                 <div style={{ fontSize: '36px', margin: '0 auto 10px', width: 'fit-content' }}>📂</div>
-                <p>Belum ada riwayat keputusan.</p>
+                <p>Belum ada riwayat keputusan untuk periode {periode}.</p>
               </div>
             ) : (
               <table>

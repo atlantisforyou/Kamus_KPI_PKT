@@ -1,0 +1,29 @@
+graph TD
+    A([Mulai]) --> B[Karyawan Input Login]
+    B --> C{Username & Password Benar?}
+    
+    C -- Tidak --> D[Notif: Username/Password Salah]
+    D --> B
+    
+    C -- Ya --> E[Halaman Dashboard]
+    E --> F[Halaman Kamus KPI]
+    
+    F --> G{Pilih Aksi}
+    G -->|Lihat| H[Riwayat Kamus KPI]
+    G -->|Buat Baru| I[Isi Kamus KPI Terbaru]
+    
+    I --> J[Submit & Kirim ke Key Partner]
+    J --> K{Review Key Partner: Benar?}
+    
+    K -- Tidak --> L{Pilihan Perbaikan}
+    L -->|Kembalikan| I
+    L -->|Bantu Edit| M[Key Partner Edit Dokumen]
+    M --> K
+    
+    K -- Ya --> N[Diteruskan ke Manajemen]
+    N --> O{Decision Manajemen}
+    
+    O -- Revisi --> P[Dikembalikan ke Karyawan / Key Partner]
+    P --> I
+    
+    O -- Approve --> Q([Selesai])

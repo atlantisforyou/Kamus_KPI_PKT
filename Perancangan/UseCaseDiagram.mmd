@@ -1,0 +1,86 @@
+flowchart LR
+    %% --- PENGATURAN STYLE ---
+    classDef actor fill:transparent,stroke:none,font-weight:bold,font-size:16px;
+    classDef usecase fill:#e6f7ff,stroke:#0050b3,stroke-width:2px;
+
+    %% --- AKTOR (KIRI) ---
+    Pengguna["👤 Pengguna"]
+    Admin["👤 Admin"]
+    
+    %% --- AKTOR (KANAN) ---
+    KeyPartner["👤 Key Partner"]
+    Manajemen["👤 Manajemen"]
+
+    %% --- BATAS SISTEM (SYSTEM BOUNDARY) ---
+    subgraph Sistem ["Sistem Pengelolaan Kamus KPI"]
+        direction TB
+        
+        %% Use Case Umum
+        UC_Login(["Login Sistem"])
+        UC_Dashboard(["Akses Dashboard Utama"])
+        
+        %% Use Case Pengguna
+        UC_BuatKamus(["Buat Kamus KPI Baru"])
+        UC_Riwayat(["Ambil Riwayat Kamus Sebelumnya"])
+        
+        %% Use Case Admin
+        UC_KelolaUser(["Kelola User"])
+        UC_KelolaKatalog(["Kelola Katalog Kamus"])
+        UC_Progres(["Pantau Progres KPI"])
+        
+        %% Use Case Key Partner
+        UC_Review(["Review Draf Kamus"])
+        UC_LihatKatalog(["Lihat Katalog KPI"])
+        UC_RekapKP(["Lihat Rekap KPI"])
+        
+        %% Use Case Manajemen
+        UC_Approval(["Approval Kamus KPI"])
+        UC_RekapMan(["Lihat Rekap Data Manajemen"])
+    end
+
+    %% Menerapkan Style
+    class Pengguna,Admin,KeyPartner,Manajemen actor;
+    class UC_Login,UC_Dashboard,UC_BuatKamus,UC_Riwayat,UC_KelolaUser,UC_KelolaKatalog,UC_Progres,UC_Review,UC_LihatKatalog,UC_RekapKP,UC_Approval,UC_RekapMan usecase;
+
+    %% ==========================================
+    %% HUBUNGAN AKTOR KIRI KE USE CASE
+    %% ==========================================
+    Pengguna --- UC_Login
+    Pengguna --- UC_Dashboard
+    Pengguna --- UC_BuatKamus
+    Pengguna --- UC_Riwayat
+
+    Admin --- UC_Login
+    Admin --- UC_Dashboard
+    Admin --- UC_KelolaUser
+    Admin --- UC_KelolaKatalog
+    Admin --- UC_Progres
+
+    %% ==========================================
+    %% HUBUNGAN AKTOR KANAN KE USE CASE
+    %% ==========================================
+    %% Penulisan dibalik (Use Case --- Aktor) agar Aktor Kanan tetap di kanan
+    UC_Login --- KeyPartner
+    UC_Dashboard --- KeyPartner
+    UC_Review --- KeyPartner
+    UC_LihatKatalog --- KeyPartner
+    UC_RekapKP --- KeyPartner
+
+    UC_Login --- Manajemen
+    UC_Dashboard --- Manajemen
+    UC_Approval --- Manajemen
+    UC_RekapMan --- Manajemen
+
+    %% ==========================================
+    %% RELASI INCLUDE & EXTEND ANTAR USE CASE
+    %% ==========================================
+    %% Menggunakan panah putus-putus (-.->) sesuai standar diagram Use Case
+    
+    %% Include (Harus dilakukan): Akses dashboard pasti membutuhkan Login
+    UC_Dashboard -. "<<include>>" .-> UC_Login
+    
+    %% Include (Harus dilakukan): Melakukan Review pasti membutuhkan aksi melihat katalog
+    UC_Review -. "<<include>>" .-> UC_LihatKatalog
+    
+    %% Extend (Opsional): Mengambil riwayat adalah opsi tambahan saat membuat kamus baru
+    UC_Riwayat -. "<<extend>>" .-> UC_BuatKamus

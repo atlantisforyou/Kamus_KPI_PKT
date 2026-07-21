@@ -26,11 +26,12 @@ function StatusBadge({ status }) {
 export default function UserDashboard() {
   const [kamus, setKamus] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null); // State untuk menyimpan data user
 
-useEffect(() => {
+  useEffect(() => {
+    // Fungsi untuk mengambil data KPI
     const fetchData = () => {
       setLoading(true);
-      
       const currentYear = localStorage.getItem('periodeKamus') || new Date().getFullYear().toString();
       
       fetch(`/api/kamus?periode=${currentYear}`)
@@ -40,7 +41,19 @@ useEffect(() => {
         .finally(() => setLoading(false));
     };
 
+    // Fungsi untuk mengambil data profil user yang sedang login
+    const fetchUser = () => {
+      fetch('/api/auth/me')
+        .then(r => r.json())
+        .then(d => {
+          // Sesuaikan dengan struktur response API Anda (misal d.user atau d.data)
+          setUser(d.user || d.data || d);
+        })
+        .catch(err => console.error("Gagal mengambil data user", err));
+    };
+
     fetchData();
+    fetchUser();
 
     window.addEventListener('periodeChanged', fetchData);
 
@@ -60,9 +73,47 @@ useEffect(() => {
   return (
     <>
       <style>{`
-        .welcome { margin-bottom: 28px; }
-        .welcome h1 { font-size: 22px; font-weight: 700; color: #1a2b4a; margin-bottom: 6px; }
-        .welcome p { font-size: 14px; color: #7a8b9a; }
+        /* Style untuk bagian Profil */
+        .profile-card {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          background: #fff;
+          border-radius: 14px;
+          padding: 24px;
+          margin-bottom: 28px;
+          box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+        }
+        .profile-avatar {
+          width: 70px;
+          height: 70px;
+          border-radius: 50%;
+          background: #e1effe;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 28px;
+          font-weight: 700;
+          color: #1d4ed8;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        .profile-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .profile-info h1 {
+          font-size: 22px;
+          font-weight: 700;
+          color: #1a2b4a;
+          margin: 0 0 4px 0;
+        }
+        .profile-info p {
+          font-size: 14px;
+          color: #64748b;
+          margin: 0;
+        }
 
         .stats-grid {
           display: grid;
@@ -103,14 +154,26 @@ useEffect(() => {
 
         .kpi-name { font-weight: 600; color: #1a2b4a; }
 
-        .empty { text-align: center; padding: 40px; color: #7a8b9a; font-size: 14px; }
-        .loading { text-align: center; padding: 40px; color: #7a8b9a; font-size: 14px; }
+        .empty, .loading { text-align: center; padding: 40px; color: #7a8b9a; font-size: 14px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
 
-      <div className="welcome">
-        <h1>Dashboard</h1>
-        <p>Selamat datang! Kelola dan pantau pengajuan Kamus KPI kamu di sini.</p>
+      {/* Bagian Profil Pengguna */}
+      <div className="profile-card">
+        <div className="profile-avatar">
+          {user?.foto ? (
+            <img src={user.foto} alt="Profile" />
+          ) : (
+            // Jika tidak ada foto, tampilkan inisial nama
+            <span>{user?.nama ? user.nama.charAt(0).toUpperCase() : 'U'}</span>
+          )}
+        </div>
+        <div className="profile-info">
+          <h1>Selamat datang, {user?.nama || 'Pengguna'}</h1>
+          <p>
+            {user?.jabatan || 'Staf'} {user?.departemen ? `• ${user.departemen}` : ''}
+          </p>
+        </div>
       </div>
 
       <div className="stats-grid">

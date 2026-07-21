@@ -1,0 +1,91 @@
+flowchart TD
+    %% --- ENTITAS EKSTERNAL ---
+    E1[Pengguna]
+    E2[Admin]
+    E3[Key Partner]
+    E4[Manajemen]
+
+    %% --- PROSES (DFD LEVEL 1) ---
+    P1(("1.0 Autentikasi dan Hak Akses"))
+    P2(("2.0 Manajemen Pengguna"))
+    P3(("3.0 Kelola dan Input KPI"))
+    P4(("4.0 Evaluasi dan Review KPI"))
+    P5(("5.0 Persetujuan dan Approval"))
+    P6(("6.0 Pantau Progres dan Rekapitulasi"))
+
+    %% --- DATA STORES ---
+    D1[("D1: Data User")]
+    D2[("D2: Data Kamus KPI")]
+    D3[("D3: Data Progres dan Realisasi")]
+
+    %% ==========================================
+    %% ALIRAN DATA: 1.0 AUTENTIKASI
+    %% ==========================================
+    E1 -->|1. Kredensial Login| P1
+    E2 -->|1. Kredensial Login| P1
+    E3 -->|1. Kredensial Login| P1
+    E4 -->|1. Kredensial Login| P1
+    
+    P1 <-->|2. Validasi Akun| D1
+    
+    P1 -->|3. Akses Dashboard| E1
+    P1 -->|3. Akses Dashboard| E2
+    P1 -->|3. Akses Dashboard| E3
+    P1 -->|3. Akses Dashboard| E4
+
+    %% ==========================================
+    %% ALIRAN DATA: 2.0 MANAJEMEN PENGGUNA (Oleh Admin)
+    %% ==========================================
+    E2 -->|Data User Baru atau Update| P2
+    P2 <-->|Simpan atau Baca Info User| D1
+    P2 -->|Daftar User| E2
+
+    %% ==========================================
+    %% ALIRAN DATA: 3.0 KELOLA DAN INPUT KPI
+    %% ==========================================
+    E1 -->|Input Kamus Baru atau Req Riwayat| P3
+    E2 -->|Update Katalog Kamus| P3
+    P3 <-->|Simpan atau Baca Data Kamus| D2
+    P3 -->|Draft Kamus atau Data Tahun Lalu| E1
+    P3 -->|Info Katalog Kamus| E2
+
+    %% ==========================================
+    %% ALIRAN DATA: 4.0 EVALUASI DAN REVIEW KPI (Oleh Key Partner)
+    %% ==========================================
+    D2 -->|Draft Kamus Butuh Review| P4
+    P4 -->|Tampilkan Draft Kamus| E3
+    E3 -->|Input Hasil Review| P4
+    P4 -->|Update Status Review| D2
+
+    %% ==========================================
+    %% ALIRAN DATA: 5.0 PERSETUJUAN DAN APPROVAL (Oleh Manajemen)
+    %% ==========================================
+    D2 -->|Draft Kamus Butuh Approval| P5
+    P5 -->|Tampilkan Draft Ter-review| E4
+    E4 -->|Status Approval Setuju atau Tolak| P5
+    P5 -->|Update Status Final| D2
+    P5 -->|Catat Hasil Persetujuan| D3
+
+    %% ==========================================
+    %% ALIRAN DATA: 6.0 PANTAU PROGRES DAN REKAPITULASI
+    %% ==========================================
+    D2 -->|Referensi Target dan Indikator| P6
+    P6 <-->|Simpan atau Update Realisasi| D3
+
+    E2 -->|Req Data Progres| P6
+    P6 -->|Laporan Progres KPI| E2
+
+    E3 -->|Req Rekap KPI| P6
+    P6 -->|Data Rekap KPI| E3
+
+    E4 -->|Req Rekap Keseluruhan| P6
+    P6 -->|Laporan Dashboard Manajemen| E4
+
+    %% Penyesuaian Style 
+    classDef entity fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef process fill:#bbf,stroke:#333,stroke-width:2px,shape:circle;
+    classDef datastore fill:#ff9,stroke:#333,stroke-width:2px;
+    
+    class E1,E2,E3,E4 entity;
+    class P1,P2,P3,P4,P5,P6 process;
+    class D1,D2,D3 datastore;

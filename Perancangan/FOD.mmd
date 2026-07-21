@@ -1,0 +1,99 @@
+flowchart TD
+    %% --- PENGATURAN WARNA DOKUMEN ---
+    classDef document fill:#e6f7ff,stroke:#0050b3,stroke-width:2px;
+    classDef database fill:#fffbe6,stroke:#d48806,stroke-width:2px;
+
+    %% ==========================================
+    %% SWIMLANE: PENGGUNA
+    %% ==========================================
+    subgraph L1 [Pengguna]
+        direction TB
+        Start([Mulai])
+        Doc_Riwayat[/Dokumen Riwayat Tahun Lalu/]
+        Doc_Draft[/Draf Kamus KPI Baru/]
+        Doc_Revisi[/Draf Kamus Revisi/]
+        
+        Start --> |Akses Fitur| Doc_Riwayat
+        Doc_Riwayat --> |Disusun menjadi| Doc_Draft
+    end
+
+    %% ==========================================
+    %% SWIMLANE: SISTEM / DATABASE
+    %% ==========================================
+    subgraph L2 [Sistem / Database]
+        direction TB
+        DB_Riwayat[(DB Riwayat)]
+        DB_Kamus[(DB Kamus KPI)]
+        DB_Progres[(DB Realisasi)]
+    end
+
+    %% ==========================================
+    %% SWIMLANE: KEY PARTNER
+    %% ==========================================
+    subgraph L3 [Key Partner]
+        direction TB
+        Proses_Review{Proses \n Review}
+        Doc_Review[/Draf Hasil Review/]
+        Doc_RekapKP[/Laporan Rekap KPI/]
+    end
+
+    %% ==========================================
+    %% SWIMLANE: MANAJEMEN
+    %% ==========================================
+    subgraph L4 [Manajemen]
+        direction TB
+        Proses_Approval{Proses \n Approval}
+        Doc_Final[/Kamus KPI Disetujui/]
+        Doc_RekapMan[/Laporan Dashboard Manajemen/]
+    end
+
+    %% ==========================================
+    %% SWIMLANE: ADMIN
+    %% ==========================================
+    subgraph L5 [Admin]
+        direction TB
+        Proses_Katalog(Update Katalog)
+        Doc_Katalog[/Katalog Kamus KPI/]
+        Proses_Pantau(Hitung Progres)
+        Doc_Progres[/Laporan Progres KPI/]
+    end
+
+    %% ==========================================
+    %% ALIRAN DOKUMEN ANTAR SWIMLANE
+    %% ==========================================
+    %% Pengguna menarik data dari sistem
+    DB_Riwayat -.-> |Tarik Data| Doc_Riwayat
+
+    %% Draf dikirim ke Key Partner untuk direview
+    Doc_Draft --> Proses_Review
+    Doc_Revisi --> Proses_Review
+
+    %% Hasil Review Key Partner
+    Proses_Review -->|Ada Perbaikan| Doc_Revisi
+    Proses_Review -->|Sesuai| Doc_Review
+
+    %% Hasil Review diteruskan ke Manajemen untuk Approval
+    Doc_Review --> Proses_Approval
+
+    %% Hasil Approval Manajemen
+    Proses_Approval -->|Ditolak/Revisi| Doc_Revisi
+    Proses_Approval -->|Disetujui| Doc_Final
+
+    %% Dokumen Final disimpan ke Sistem dan masuk ke Admin
+    Doc_Final --> |Simpan Master| DB_Kamus
+    Doc_Final --> Proses_Katalog
+    Proses_Katalog --> Doc_Katalog
+    
+    %% Alur Progres & Laporan
+    DB_Kamus -.-> |Referensi Target| Proses_Pantau
+    DB_Progres -.-> |Data Realisasi| Proses_Pantau
+    
+    Proses_Pantau --> Doc_Progres
+    
+    %% Distribusi Laporan ke Role Terkait
+    Doc_Progres --> |Distribusi Rekap| Doc_RekapKP
+    Doc_Progres --> |Distribusi Laporan| Doc_RekapMan
+
+    %% Penerapan Style Class
+    class Doc_Riwayat,Doc_Draft,Doc_Revisi,Doc_Review,Doc_Final,Doc_Katalog,Doc_Progres,Doc_RekapKP,Doc_RekapMan document;
+    class DB_Riwayat,DB_Kamus,DB_Progres database;

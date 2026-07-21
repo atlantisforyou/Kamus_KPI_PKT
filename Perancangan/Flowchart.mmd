@@ -1,0 +1,47 @@
+flowchart TD
+    Start([Mulai Aplikasi]) --> LoginPage[Halaman Login]
+    
+    LoginPage --> Auth{Otentikasi & Cek Role}
+    
+    Auth -->|Role: Pengguna| Pengguna_Dash
+    Auth -->|Role: Admin| Admin_Dash
+    Auth -->|Role: Key Partner| KP_Dash
+    Auth -->|Role: Manajemen| Man_Dash
+
+    subgraph Role_Pengguna [1. Pengguna]
+        Pengguna_Dash[Dashboard Pengguna]
+        Pengguna_Dash --> P1(Buat Kamus KPI Baru)
+        Pengguna_Dash --> P2(Ambil Riwayat Tahun Sebelumnya)
+    end
+
+    subgraph Role_Admin [2. Admin]
+        Admin_Dash[Dashboard Admin]
+        Admin_Dash --> A1(Kelola User)
+        Admin_Dash --> A2(Kelola / Katalog Kamus)
+        Admin_Dash --> A3(Progres KPI)
+    end
+
+    subgraph Role_KeyPartner [3. Key Partner]
+        KP_Dash[Dashboard Key Partner]
+        KP_Dash --> K1(Review Kamus)
+        KP_Dash --> K2(Katalog KPI)
+        KP_Dash --> K3(Rekap KPI)
+    end
+
+    subgraph Role_Manajemen [4. Manajemen]
+        Man_Dash[Dashboard Manajemen]
+        Man_Dash --> M1(Approval Kamus)
+        Man_Dash --> M2(Rekap Data)
+    end
+
+    %% Hubungan ke Logout (Opsional untuk melengkapi alur)
+    P1 --> Logout([Logout])
+    P2 --> Logout
+    A1 --> Logout
+    A2 --> Logout
+    A3 --> Logout
+    K1 --> Logout
+    K2 --> Logout
+    K3 --> Logout
+    M1 --> Logout
+    M2 --> Logout

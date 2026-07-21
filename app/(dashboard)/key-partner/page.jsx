@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import StatCard from '@/components/ui/StatCard';
 
@@ -26,22 +26,67 @@ const Ico = {
 };
 
 export default function KeyPartnerDashboard() {
-  const [data, setData] = useState({ s: { drf: 0, sub: 0, rev: 0, app: 0, tot: 0 }, h: [], ld: true });
+  const [rawData, setRawData] = useState([]);
+  const [ld, setLd] = useState(true);
+  const [periode, setPeriode] = useState('');
 
+  // 1. SINKRONISASI PERIODE DARI HEADER
   useEffect(() => {
-    fetch('/api/kamus?all=true').then(r => r.json()).then(d => {
-      const l = d.data || [];
-      const c = (stat) => l.filter(k => k.status === stat).length;
-      setData({
-        s: { tot: l.length, drf: c('draft'), sub: c('submitted'), rev: c('reviewed'), app: c('approved') },
-        h: l.filter(k => ['reviewed','approved'].includes(k.status)).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)),
-        ld: false
-      });
-    }).catch(() => setData(p => ({ ...p, ld: false })));
+    const syncPeriodeFromHeader = () => {
+      const savedYear = localStorage.getItem('periodeKamus');
+      if (savedYear) {
+        setPeriode(savedYear);
+      } else {
+        setPeriode(new Date().getFullYear().toString()); 
+      }
+    };
+
+    syncPeriodeFromHeader();
+    window.addEventListener('periodeChanged', syncPeriodeFromHeader);
+
+    return () => {
+      window.removeEventListener('periodeChanged', syncPeriodeFromHeader);
+    };
   }, []);
 
+  // 2. FETCH DATA MENTAH
+  useEffect(() => {
+    fetch('/api/kamus?all=true')
+      .then(r => r.json())
+      .then(d => {
+        setRawData(d.data || []);
+        setLd(false);
+      })
+      .catch(() => setLd(false));
+  }, []);
+
+  // 3. FILTER DAN KALKULASI BERDASARKAN PERIODE
+  const { s, h } = useMemo(() => {
+    // Filter by year/periode
+    const filteredList = !periode 
+      ? rawData 
+      : rawData.filter(item => {
+          const itemTahun = item.tahun || (item.created_at ? item.created_at.substring(0, 4) : '');
+          return String(itemTahun) === String(periode);
+        });
+
+    const c = (stat) => filteredList.filter(k => k.status === stat).length;
+
+    return {
+      s: { 
+        tot: filteredList.length, 
+        drf: c('draft'), 
+        sub: c('submitted'), 
+        rev: c('reviewed'), 
+        app: c('approved') 
+      },
+      h: filteredList
+        .filter(k => ['reviewed','approved'].includes(k.status))
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+    };
+  }, [rawData, periode]);
+
   const fmtTgl = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
-  const { s, h, ld } = data;
 
   return (
     <>
@@ -75,7 +120,7 @@ export default function KeyPartnerDashboard() {
       <div>
         <div className="welcome">
           <h1>Dashboard Key Partner</h1>
-          <p>Review dan teruskan pengajuan Kamus KPI dari karyawan ke Manajemen.</p>
+          <p>Review dan teruskan pengajuan Kamus KPI dari karyawan ke Manajemen untuk periode {periode}.</p>
         </div>
 
         <div className="stats-grid">
@@ -89,7 +134,7 @@ export default function KeyPartnerDashboard() {
           {/* Table Riwayat */}
           <div>
             <div className="section-title">Riwayat Review</div>
-            <div className="section-sub">KPI yang sudah kamu proses</div>
+            <div className="section-sub">KPI yang sudah kamu proses pada periode {periode}</div>
             
             <div className="table-wrap">
               {ld ? (
@@ -105,7 +150,7 @@ export default function KeyPartnerDashboard() {
               ) : h.length === 0 ? (
                 <div className="empty">
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>{Ico.Empty}</div>
-                  <p>Belum ada riwayat review.</p>
+                  <p>Belum ada riwayat review untuk periode ini.</p>
                 </div>
               ) : (
                 <table>

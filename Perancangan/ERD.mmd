@@ -1,0 +1,67 @@
+erDiagram
+    %% 1. Relasi Organisasi (Hierarki)
+    DIREKTORAT ||--o{ KOMPARTEMEN : "menaungi"
+    KOMPARTEMEN ||--o{ DEPARTEMEN : "menaungi"
+    
+    %% 2. Relasi Penempatan Karyawan
+    DEPARTEMEN ||--o{ KARYAWAN : "ditempati oleh"
+    
+    %% 3. Relasi Master Data
+    MASTER_SASARAN ||--o{ KAMUS_KPI : "dijabarkan menjadi (sasaran_id)"
+
+    %% 4. Relasi Transaksional Kamus KPI & Approval
+    DEPARTEMEN ||--o{ KAMUS_KPI : "kepemilikan dokumen (departemen_id)"
+    KARYAWAN ||--o{ KAMUS_KPI : "menginisiasi (pembuat_id)"
+    KARYAWAN ||--o{ KAMUS_KPI : "mengevaluasi (reviewed_by)"
+    KARYAWAN ||--o{ KAMUS_KPI : "mengotorisasi (approved_by)"
+
+    %% Struktur Entitas Organisasi
+    DIREKTORAT {
+        int id PK
+        string nama_direktorat
+    }
+
+    KOMPARTEMEN {
+        int id PK
+        string nama_kompartemen
+        int direktorat_id FK
+    }
+
+    DEPARTEMEN {
+        int id PK
+        string nama_departemen
+        int kompartemen_id FK
+    }
+
+    %% Struktur Entitas Master Sasaran
+    MASTER_SASARAN {
+        int id PK
+        string perspektif_bsc
+        string sasaran_strategis
+    }
+
+    %% Struktur Entitas Karyawan (Manajemen Pengguna)
+    KARYAWAN {
+        int id PK
+        string nama_karyawan
+        string username_npk
+        string password
+        string role "user, key_partner, admin, manajemen"
+        int departemen_id FK
+    }
+
+    %% Struktur Entitas Utama (Alur Kerja Persetujuan)
+    KAMUS_KPI {
+        int id PK
+        int sasaran_id FK
+        string nama_kpi
+        string jenis_pengukuran
+        string polaritas
+        text formula_penilaian
+        decimal target_jan_des "Target spesifik per bulan"
+        string status "draft, submitted, reviewed, revisi, approved"
+        int departemen_id FK
+        int pembuat_id FK
+        int reviewed_by FK
+        int approved_by FK
+    }

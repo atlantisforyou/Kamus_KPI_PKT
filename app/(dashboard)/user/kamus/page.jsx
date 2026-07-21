@@ -213,8 +213,6 @@ export default function KamusPage() {
                       <td style={{ fontSize: 13, color: '#7a8b9a' }}>{k.perspektif_bsc || '-'}</td>
                       <td style={{ fontSize: 13, color: '#7a8b9a', whiteSpace: 'nowrap' }}>{formatTgl(k.created_at)}</td>
                       <td><StatBadge s={k.status} /></td>
-                      {/* Di sini bagian <td> yang berisi tombol aksi dihapus 
-                      */}
                     </tr>
                   ))}
                 </tbody>

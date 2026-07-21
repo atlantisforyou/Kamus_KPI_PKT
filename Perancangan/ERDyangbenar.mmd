@@ -1,0 +1,62 @@
+erDiagram
+    %% Relasi Organisasi
+    DIREKTORAT ||--o{ KOMPARTEMEN : "menaungi"
+    KOMPARTEMEN ||--o{ DEPARTEMEN : "menaungi"
+    
+    %% Relasi Penempatan Karyawan
+    DEPARTEMEN ||--o{ KARYAWAN : "ditempati oleh"
+    
+    %% Relasi Transaksional Kamus KPI
+    DEPARTEMEN ||--o{ KAMUS_KPI : "memiliki"
+    KARYAWAN ||--o{ KAMUS_KPI : "membuat (pembuat_id)"
+    KARYAWAN ||--o{ KAMUS_KPI : "me-review (reviewed_by)"
+    KARYAWAN ||--o{ KAMUS_KPI : "menyetujui (approved_by)"
+
+    %% Struktur Entitas DIREKTORAT
+    DIREKTORAT {
+        int id PK
+        string nama_direktorat
+    }
+
+    %% Struktur Entitas KOMPARTEMEN
+    KOMPARTEMEN {
+        int id PK
+        string nama_kompartemen
+        int direktorat_id FK
+    }
+
+    %% Struktur Entitas DEPARTEMEN
+    DEPARTEMEN {
+        int id PK
+        string nama_departemen
+        int kompartemen_id FK
+    }
+
+    %% Struktur Entitas KARYAWAN
+    KARYAWAN {
+        int id PK
+        string nama_karyawan
+        string username_npk
+        string password
+        enum role "user, key_partner, admin, manajemen"
+        int departemen_id FK
+        int kompartemen_id FK
+        int direktorat_id FK
+    }
+
+    %% Struktur Entitas KAMUS KPI
+    KAMUS_KPI {
+        int id PK
+        string perspektif_bsc
+        string sasaran_strategis
+        string nama_kpi
+        string jenis_pengukuran
+        string polaritas
+        text formula_penilaian
+        decimal target_jan_des "Target bulanan"
+        enum status "draft, submitted, reviewed, revisi, approved"
+        int pembuat_id FK
+        int departemen_id FK
+        int reviewed_by FK
+        int approved_by FK
+    }

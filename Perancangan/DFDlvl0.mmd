@@ -1,0 +1,33 @@
+flowchart LR
+    %% --- ENTITAS EKSTERNAL ---
+    E1[Pengguna]
+    E2[Admin]
+    E3[Key Partner]
+    E4[Manajemen]
+
+    %% --- PROSES TUNGGAL (CONTEXT DIAGRAM) ---
+    P0(("0.0 Sistem Pengelolaan<br>Kamus KPI"))
+
+    %% --- ALIRAN DATA ---
+    %% Pengguna
+    E1 -->|Kredensial Login, Draf Kamus Baru, Request Riwayat| P0
+    P0 -->|Konfirmasi Akses, Data Riwayat, Status Kamus| E1
+
+    %% Admin
+    E2 -->|Kredensial Login, Data User Baru, Update Katalog| P0
+    P0 -->|Konfirmasi Akses, Laporan Progres KPI, Data User| E2
+
+    %% Key Partner
+    E3 -->|Kredensial Login, Hasil Review Kamus| P0
+    P0 -->|Konfirmasi Akses, Draf Kamus Butuh Review, Data Rekap| E3
+
+    %% Manajemen
+    E4 -->|Kredensial Login, Keputusan Approval| P0
+    P0 -->|Konfirmasi Akses, Draf Kamus Butuh Approval, Laporan Rekap| E4
+
+    %% Penyesuaian Style
+    classDef entity fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef process fill:#bbf,stroke:#333,stroke-width:2px,shape:circle;
+    
+    class E1,E2,E3,E4 entity;
+    class P0 process;

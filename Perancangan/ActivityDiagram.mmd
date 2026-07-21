@@ -1,0 +1,120 @@
+flowchart TD
+    %% --- PENGATURAN STYLE UNTUK ACTIVITY DIAGRAM ---
+    classDef action fill:#d5e8d4,stroke:#82b366,stroke-width:2px,shape:rect,rx:10,ry:10;
+    classDef decision fill:#ffe6cc,stroke:#d79b00,stroke-width:2px,shape:diamond;
+    classDef startend fill:#f5f5f5,stroke:#666666,stroke-width:2px,shape:pill;
+
+    %% --- TITIK AWAL ---
+    Start([Mulai])
+
+    %% ==========================================
+    %% SWIMLANE 1: PENGGUNA
+    %% ==========================================
+    subgraph Pengguna [1. Pengguna]
+        direction TB
+        Act_Login(Login ke Sistem)
+        Dec_Riwayat{Gunakan Riwayat \nTahun Lalu?}
+        Act_TarikRiwayat(Tarik Data Riwayat KPI)
+        Act_BuatDraf(Buat Draf Kamus KPI Baru)
+        Act_Submit(Submit Draf Kamus)
+        Act_Revisi(Perbaiki Draf Sesuai Catatan)
+    end
+
+    %% ==========================================
+    %% SWIMLANE 2: SISTEM (BARU)
+    %% ==========================================
+    subgraph Sistem [2. Sistem]
+        direction TB
+        Sys_Validasi{Sistem Validasi \nKredensial?}
+        Sys_SimpanDraf(Simpan Draf & Set Menunggu Review)
+        Sys_SetRevisi(Update Status ke Butuh Revisi)
+        Sys_SetReview(Update Status ke Menunggu Approval)
+        Sys_SetFinal(Update Status Akhir: Disetujui)
+        Sys_Hitung(Kalkulasi Progres Otomatis)
+    end
+
+    %% ==========================================
+    %% SWIMLANE 3: KEY PARTNER
+    %% ==========================================
+    subgraph KeyPartner [3. Key Partner]
+        direction TB
+        Act_TerimaDraf(Terima Draf Kamus)
+        Act_Review(Lakukan Review Kamus)
+        Dec_HasilReview{Sesuai \nKriteria?}
+    end
+
+    %% ==========================================
+    %% SWIMLANE 4: MANAJEMEN
+    %% ==========================================
+    subgraph Manajemen [4. Manajemen]
+        direction TB
+        Act_TerimaReview(Terima Hasil Review)
+        Act_Evaluasi(Evaluasi & Approval Kamus)
+        Dec_Approval{Keputusan \nApproval?}
+        Act_Disetujui(Tetapkan Kamus Disetujui)
+    end
+
+    %% ==========================================
+    %% SWIMLANE 5: ADMIN
+    %% ==========================================
+    subgraph Admin [5. Admin]
+        direction TB
+        Act_UpdateKatalog(Update Katalog Kamus KPI)
+        Act_InputProgres(Input atau Update Realisasi)
+        Act_Rekap(Sajikan Data Rekap)
+    end
+
+    %% --- TITIK AKHIR ---
+    End([Selesai])
+
+    %% ==========================================
+    %% ALUR AKTIVITAS (ACTIVITY FLOW)
+    %% ==========================================
+    Start --> Act_Login
+    Act_Login --> Sys_Validasi
+    
+    Sys_Validasi -->|Gagal| Act_Login
+    Sys_Validasi -->|Sukses| Dec_Riwayat
+    
+    Dec_Riwayat -->|Ya| Act_TarikRiwayat
+    Act_TarikRiwayat --> Act_BuatDraf
+    Dec_Riwayat -->|Tidak| Act_BuatDraf
+    
+    Act_BuatDraf --> Act_Submit
+    Act_Submit --> Sys_SimpanDraf
+    
+    %% Aliran ke Key Partner
+    Sys_SimpanDraf --> Act_TerimaDraf
+    Act_TerimaDraf --> Act_Review
+    Act_Review --> Dec_HasilReview
+    
+    %% Keputusan Review
+    Dec_HasilReview -->|Revisi| Sys_SetRevisi
+    Sys_SetRevisi --> Act_Revisi
+    Act_Revisi --> Act_Submit
+    
+    Dec_HasilReview -->|Sesuai| Sys_SetReview
+    Sys_SetReview --> Act_TerimaReview
+    
+    %% Aliran ke Manajemen
+    Act_TerimaReview --> Act_Evaluasi
+    Act_Evaluasi --> Dec_Approval
+    
+    %% Keputusan Approval
+    Dec_Approval -->|Tolak atau Revisi| Sys_SetRevisi
+    Dec_Approval -->|Disetujui| Act_Disetujui
+    
+    %% Aliran ke Admin (Pasca Approval)
+    Act_Disetujui --> Sys_SetFinal
+    Sys_SetFinal --> Act_UpdateKatalog
+    Act_UpdateKatalog --> Act_InputProgres
+    Act_InputProgres --> Sys_Hitung
+    Sys_Hitung --> Act_Rekap
+    
+    Act_Rekap --> End
+
+    %% Menerapkan class style
+    class Start,End startend;
+    class Act_Login,Act_TarikRiwayat,Act_BuatDraf,Act_Submit,Act_Revisi,Act_TerimaDraf,Act_Review,Act_TerimaReview,Act_Evaluasi,Act_Disetujui,Act_UpdateKatalog,Act_InputProgres,Act_Rekap action;
+    class Sys_SimpanDraf,Sys_SetRevisi,Sys_SetReview,Sys_SetFinal,Sys_Hitung action;
+    class Dec_Riwayat,Dec_HasilReview,Dec_Approval,Sys_Validasi decision;

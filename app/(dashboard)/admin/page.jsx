@@ -2,74 +2,58 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import StatCard from '@/components/ui/StatCard';
+import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
-const Skel = ({ w = '100%', h = '14px', r = '6px' }) => <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />;
-
-const NOTIF_STYLE = {
-  info:    { bg: '#f8fafc', border: '#3b7dd8' },
-  warning: { bg: '#fffbeb', border: '#f59e0b' },
-  success: { bg: '#f0fdf4', border: '#10b981' },
-};
+const Skel = ({ w = '100%', h = '14px', r = '6px' }) => (
+  <span style={{ display: 'inline-block', width: w, height: h, background: '#eef2f7', borderRadius: r, animation: 'pulse 1.2s infinite' }} />
+);
 
 export default function AdminDashboard() {
-  const [rawData, setRawData] = useState({ kar: [], kam: [], notices: [], load: true });
-  const [showModalNotif, setShowModalNotif] = useState(false);
+  const [rawData, setRawData] = useState({ kar: [], kam: [], load: true });
   const [showModalKaryawan, setShowModalKaryawan] = useState(false); 
   const [searchTerm, setSearchTerm] = useState(''); 
   
-  // 1. STATE PERIODE (Default akan diisi dari Header)
   const [periode, setPeriode] = useState('');
 
-  // 2. EFFECT UNTUK SINKRONISASI DENGAN HEADER.JSX
   useEffect(() => {
-    // Fungsi untuk membaca periode dari Header
     const syncPeriodeFromHeader = () => {
       const savedYear = localStorage.getItem('periodeKamus');
       if (savedYear) {
         setPeriode(savedYear);
       } else {
-        setPeriode(new Date().getFullYear().toString()); // Fallback tahun ini
+        setPeriode(new Date().getFullYear().toString()); 
       }
     };
 
-    // Jalankan sekali saat halaman dimuat
     syncPeriodeFromHeader();
-
-    // Dengarkan event perubahan dari Header.jsx
     window.addEventListener('periodeChanged', syncPeriodeFromHeader);
 
-    // Bersihkan listener saat komponen di-unmount
     return () => {
       window.removeEventListener('periodeChanged', syncPeriodeFromHeader);
     };
   }, []);
 
-  // Effect untuk Fetch Data Awal
   useEffect(() => {
     (async () => {
       try {
-        const [rKar, rKam, rNotif] = await Promise.all([
+        const [rKar, rKam] = await Promise.all([
           fetch('/api/karyawan').catch(() => null),
           fetch('/api/kamus?all=true').catch(() => null),
-          fetch('/api/notifikasi').catch(() => null) 
         ]);
 
         const kar = rKar && rKar.ok ? ((await rKar.json()).data || []) : [];
         const kam = rKam && rKam.ok ? ((await rKam.json()).data || []) : [];
-        const notices = rNotif && rNotif.ok ? ((await rNotif.json()).data || []) : [];
         
-        setRawData({ kar, kam, notices, load: false });
+        setRawData({ kar, kam, load: false });
       } catch { 
         setRawData(p => ({ ...p, load: false })); 
       }
     })();
   }, []);
 
-  // Filter Data Berdasarkan Periode
   const dashboardData = useMemo(() => {
-    const { kar, kam, notices, load } = rawData;
+    const { kar, kam, load } = rawData;
     
-    // Pastikan string periode cocok. Mengabaikan filter jika periode kosong
     const filteredKam = !periode 
       ? kam 
       : kam.filter(item => {
@@ -98,7 +82,6 @@ export default function AdminDashboard() {
 
     return {
       load,
-      notices,
       stat: { 
         kar: kar.length, 
         kam: filteredKam.length, 
@@ -111,7 +94,7 @@ export default function AdminDashboard() {
     };
   }, [rawData, periode]);
 
-  const { stat, karyawanStatus, notices, load } = dashboardData;
+  const { stat, karyawanStatus, load } = dashboardData;
 
   const filteredKaryawan = karyawanStatus.filter(k => 
     k.nama?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -125,6 +108,13 @@ export default function AdminDashboard() {
     { l: 'Reviewed',       v: stat?.rev, c: '#2563eb', h: '/admin/monitoring' },
     { l: 'Approved',       v: stat?.app, c: '#10b981', h: '/admin/monitoring' },
   ];
+
+  const chartData = useMemo(() => [
+    { name: 'Draft', total: stat.drf, color: '#6b7280' },
+    { name: 'Submitted', total: stat.sub, color: '#d97706' },
+    { name: 'Reviewed', total: stat.rev, color: '#2563eb' },
+    { name: 'Approved', total: stat.app, color: '#10b981' },
+  ].filter(item => item.total > 0), [stat]);
 
   return (
     <>
@@ -149,6 +139,11 @@ export default function AdminDashboard() {
         .modal-body { padding:24px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
         @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        
+        /* Custom Tooltip Recharts */
+        .custom-tooltip { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .custom-tooltip-label { font-size: 13px; font-weight: 600; color: #1a2b4a; margin-bottom: 4px; }
+        .custom-tooltip-value { font-size: 13px; color: #64748b; }
       `}</style>
       
       <div>
@@ -163,9 +158,8 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
+        <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' }}>
           
-          {/* SECTION STATUS PEMBUATAN KAMUS */}
           <div className="section-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Status Pembuatan Kamus</h2>
@@ -220,37 +214,71 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          {/* SECTION NOTICE BOARD */}
           <div className="section-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Notice board</h2>
-              <button onClick={() => setShowModalNotif(true)} className="view-all-link">View all &rarr;</button>
+            <div style={{ marginBottom: 22 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Statistik Kamus KPI</h2>
+              <p style={{ fontSize: 13, color: '#7a8b9a', marginTop: 4 }}>Distribusi status dokumen saat ini.</p>
             </div>
-            <div style={{ borderTop: '1px solid #f0f4f8', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            
+            <div style={{ width: '100%', height: 320, position: 'relative' }}>
               {load ? (
-                <><Skel h="60px" r="8px" /><Skel h="60px" r="8px" /></>
-              ) : notices.length === 0 ? (
-                <div style={{ fontSize: 13, color: '#7a8b9a', textAlign: 'center', padding: '20px 0' }}>Belum ada pemberitahuan.</div>
+                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                   <Skel w="200px" h="200px" r="50%" />
+                 </div>
+              ) : chartData.length === 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94a3b8', fontSize: 14 }}>
+                  Belum ada data dokumen.
+                </div>
               ) : (
-                notices.slice(0, 5).map((n) => {
-                  const style = NOTIF_STYLE[n.tipe] || NOTIF_STYLE.info;
-                  return (
-                    <div key={n.id} style={{ padding: '14px', background: style.bg, borderRadius: 8, borderLeft: `3px solid ${style.border}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a2b4a' }}>{n.judul}</div>
-                        <div style={{ fontSize: 10, color: '#a0aec0', whiteSpace: 'nowrap', marginLeft: 8 }}>{n.waktu_teks}</div>
-                      </div>
-                      <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{n.pesan}</div>
-                    </div>
-                  );
-                })
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={80}
+                      outerRadius={110}
+                      paddingAngle={4}
+                      dataKey="total"
+                      isAnimationActive={true}
+                      animationBegin={0}
+                      animationDuration={800}
+                      animationEasing="ease-out"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="custom-tooltip">
+                              <div className="custom-tooltip-label" style={{ color: payload[0].payload.color }}>
+                                {payload[0].payload.name}
+                              </div>
+                              <div className="custom-tooltip-value">Jumlah: <b>{payload[0].value}</b> dokumen</div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="circle" 
+                      wrapperStyle={{ fontSize: '13px', color: '#475569' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* MODAL KARYAWAN */}
       {showModalKaryawan && (
         <div className="modal-overlay" onClick={() => setShowModalKaryawan(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -309,36 +337,6 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL NOTIFIKASI */}
-      {showModalNotif && (
-        <div className="modal-overlay" onClick={() => setShowModalNotif(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a2b4a', margin: 0 }}>Semua Pemberitahuan</h2>
-              <button onClick={() => setShowModalNotif(false)} style={{ background: '#f4f6f9', border: 'none', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', color: '#64748b' }}>✕</button>
-            </div>
-            <div className="modal-body">
-              {notices.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Tidak ada pemberitahuan.</div>
-              ) : (
-                notices.map((n) => {
-                  const style = NOTIF_STYLE[n.tipe] || NOTIF_STYLE.info;
-                  return (
-                    <div key={`modal-notif-${n.id}`} style={{ padding: '16px', background: style.bg, borderRadius: 10, borderLeft: `4px solid ${style.border}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a2b4a' }}>{n.judul}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8' }}>{n.waktu_teks}</div>
-                      </div>
-                      <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>{n.pesan}</div>
-                    </div>
-                  );
-                })
               )}
             </div>
           </div>
